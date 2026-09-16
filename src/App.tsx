@@ -26,6 +26,7 @@ import {
 } from './lib/storage';
 import { UNIFIED_ENGINES, INITIAL_CONVERSATIONS, INITIAL_TASKS } from './lib/constants';
 import { getSovereignResponse } from './lib/sovereignEngine';
+import { NetworkBar } from './components/NetworkBar';
 import { Header } from './components/Header';
 import { CloudSyncModal } from './components/CloudSyncModal';
 import { VisionSearchPortal } from './components/VisionSearchPortal';
@@ -564,6 +565,9 @@ export default function App() {
 
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${getThemeClass()}`}>
+      {/* Top Network Ecosystem Bar */}
+      <NetworkBar isArabic={userPreferences.language === 'ar'} />
+
       {/* Top Universal Platform Header */}
       <Header
         activeView={activeView}
