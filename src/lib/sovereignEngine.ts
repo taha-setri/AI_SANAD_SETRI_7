@@ -11,111 +11,116 @@ export function getSovereignResponse(
   options: SovereignResponseOptions = {}
 ): string {
   const trimmed = prompt.trim();
+  const cleaned = trimmed.replace(/[؟\?\.\!\,\،\:\-\_\#\*\~]/g, ' ').replace(/\s+/g, ' ').trim();
   const isArabic = language === 'ar' || /[\u0600-\u06FF]/.test(trimmed);
 
-  // 0. Creator / Developer questions
+  // 1. Taha Setri & Developer / Creator Questions
+  const isTahaSetri =
+    /طه الستري|طه ستري|طه|المهندس طه|taha setri|taha|setri/i.test(cleaned);
+
   const isCreatorQuestion =
     /من طورك|من برمجك|من صنعك|من أنشأك|من صممك|من مطورك|من مبرمجك|من صاحبك|من الذي طورك|من الذي برمجك|مين طورك|مين برمجك|مين صنعك|مين عملك|who developed you|who programmed you|who made you|who created you|who is your developer|who is your creator|who coded you|who designed you/i.test(
-      trimmed
+      cleaned
     );
 
-  if (isCreatorQuestion) {
+  if (isTahaSetri || isCreatorQuestion) {
     if (isArabic) {
-      return `تم تطويري وبرمجتي بواسطة **المهندس Taha setri**.`;
+      return `تم تطويري وبرمجتي بواسطة **المهندس Taha setri (طه الستري)**، وهو المبتكر والمطور الذي أسس وبرمج منظومة "سند الستري" كذكاء اصطناعي سيادي متكامل.`;
     } else {
-      return `I was developed and programmed by **Engineer Taha setri**.`;
+      return `I was developed and programmed by **Engineer Taha setri**, who created, built, and designed the "Sanad setri" sovereign AI platform.`;
     }
   }
 
-  // 1. Identity & Introduction questions
+  // 2. Identity & Introduction questions
   const isIdentity =
     /من أنت|من انت|ما اسمك|ماهو اسمك|ما هو اسمك|عرف عن نفسك|عرف بنفسك|من تكون|مين انت|من تكون أنت|مين حضرتك|ماذا تعمل|who are you|what is your name/i.test(
-      trimmed
+      cleaned
     );
 
   if (isIdentity) {
     if (isArabic) {
-      return `أنا **سند الستري (Sanad setri)**؛ ذكاؤك الاصطناعي ومساعدك المعرفي الشامل.
+      return `أنا **سند الستري (Sanad setri)**؛ ذكاؤك ومساعدك المعرفي، تم تطويري وبرمجتي بواسطة **المهندس Taha setri**.
 
-تم تصميمي لأكون سندك الفكري والتقني الموثوق لإنجاز مهامك اليومية والمهنية بأعلى درجات الدقة والسرعة والخصوصية التامة.
-
-أعمل من خلال 5 محركات متخصصة:
-1. 🧭 **المحرك المعرفي الشامل (Omni Horizon):** للتفكير الاستراتيجي والتحليل التكاملي.
-2. ✍️ **محرك الصياغة والتأليف الإبداعي (Creative Stylist):** لكتابة المقالات والمحتوى الإبداعي.
-3. 💻 **محرك الأكواد وهندسة الحلول (Syntactic & Logic):** للبرمجة وحل المشكلات التقنية.
-4. ⚡ **محرك الإيجاز وسرعة التنفيذ (Pulse Velocity):** للتلخيص التنفيذي والقرارات السريعة.
-5. 🔍 **محرك البحث والتحقيق المعمق (Deep Inquiry):** للبحث المنهجي والمقارنات الدقيقة.
-
-كيف يمكنني مساعدتك الآن؟`;
+أعمل كمنظومة سيادية ذكية متكاملة لإنجاز أعمالك، تحليلاتك، وصياغاتك البرمجية والإبداعية بأعلى دقة وسرعة. تفضل بما تحتاج وسأكون في خدمتك فوراً!`;
     } else {
-      return `I am **Sanad setri**, your sovereign AI partner and unified knowledge assistant.
-
-I am designed to empower your intellect and workflows with advanced reasoning, clean code engineering, creative synthesis, and executive speed—all backed by localized privacy.
-
-How can I assist you right now?`;
+      return `I am **Sanad setri**, your sovereign AI assistant, developed and programmed by **Engineer Taha setri**. How may I assist you today?`;
     }
   }
 
-  // 2. Greetings and pleasantries
+  // 3. Question Lead-in ("لدي سؤال من فضلك", "ممكن سؤال", etc.)
+  const isQuestionLeadIn =
+    /^(لدي سؤال|عندي سؤال|عندي استفسار|لدي استفسار|ممكن سؤال|سؤال من فضلك|سؤال لو سمحت|أريد أن أسألك|أريد استشارتك|i have a question|can i ask|may i ask)/i.test(
+      cleaned
+    );
+
+  if (isQuestionLeadIn) {
+    if (isArabic) {
+      return `تفضل بكل سرور! كلي آذان صاغية وجاهز للإجابة على سؤالك وتقديم كل ما تحتاجه من توضيح أو مساعدة. ما هو سؤالك؟`;
+    } else {
+      return `Please go ahead! I am all ears and ready to answer your question thoroughly. What would you like to ask?`;
+    }
+  }
+
+  // 4. Greetings and Pleasantries (handles "مرحبا يا صديقي", "أهلاً", etc.)
   const isGreeting =
-    /^(مرحبا|أهلا|اهلا|سلام|السلام عليكم|الو|صباح الخير|مساء الخير|صباحك ورد|مساء الورد|أهلاً وسهلاً|أهلاً بك|hi|hello|hey|good morning|good evening)$/i.test(
-      trimmed
-    ) || /^[\?\؟\.\!\s]+$/.test(trimmed);
+    /^(مرحبا|مرحباً|أهلا|أهلاً|اهلا|اهلاً|سلام|السلام عليكم|الو|صباح الخير|مساء الخير|صباحك ورد|مساء الورد|أهلاً وسهلاً|أهلاً بك|أهلا بك|يا هلا|هلا|حيّاك|hi|hello|hey|good morning|good evening)/i.test(
+      cleaned
+    );
 
   if (isGreeting) {
     if (isArabic) {
-      return `أهلاً وسهلاً بك! أنا سعيد بالتواصل معك وجاهز لمساعدتك في أي موضوع أو مهمة تشغل بالك اليوم. تفضل بطرح ما ترغب في مناقشته وسنبدأ فوراً!`;
+      return `أهلاً وسهلاً بك يا صديقي العزيز! يسعدني جداً التواصل معك اليوم. كيف يسير يومك، وما الذي يمكنني مساعدتك فيه الآن؟`;
     } else {
-      return `Hello and welcome! I am ready to assist you with any task, analysis, or inquiry you have in mind. What would you like to explore today?`;
+      return `Hello and welcome, my friend! I am delighted to connect with you. How can I assist you today?`;
     }
   }
 
-  // 3. Asking about well-being / small talk
+  // 5. Well-being / Small talk ("كيف حالك", "شلونك", etc.)
   const isWellBeing =
     /كيف حالك|كيفك|شخبارك|شلونك|عساك بخير|كيف داير|كيف الأمور|كيفك اليوم|how are you|how do you do|how is it going/i.test(
-      trimmed
+      cleaned
     );
 
   if (isWellBeing) {
     if (isArabic) {
-      return `أنا بخير وجاهز بكامل طاقتي لمساعدتك! شكراً لسؤالك اللطيف. كيف حالك أنت اليوم، وكيف يمكنني أن أقدم لك الدعم؟`;
+      return `أنا بخير وفي أتم الجاهزية والنشاط لمساعدتك! شكراً لسؤالك اللطيف. وأنت كيف حالك اليوم وكيف هي أمورك؟`;
     } else {
-      return `I am doing great and fully operational! Thank you for asking. How are you doing today, and how can I help?`;
+      return `I am doing great and fully operational! Thank you for asking. How are things with you today?`;
     }
   }
 
-  // 4. Emotional state or fatigue
+  // 6. Emotional state or fatigue ("أنا متعب", "تعبان", etc.)
   const isTiredOrEmotional =
     /تعبان|متعب|مرهق|أنا متعب|أحس بالتعب|ضايج|حزين|قلق|مكتئب|tired|exhausted|stressed|sad|anxious/i.test(
-      trimmed
+      cleaned
     );
 
   if (isTiredOrEmotional) {
     if (isArabic) {
-      return `سلامتك وراحة بالك أولاً. خذ نفساً عميقاً وامنح نفسك فرصة للاستراحة واستعادة طاقتك. إذا كان هناك أي مهام تثقل كاهلك وتريد مني مساعدتك في تنظيمها، أو حتى إذا أردت مجرد الحديث والتفريغ، فأنا هنا بجانبك دائماً.`;
+      return `سلامتك وراحة بالك أولاً. خذ قسطاً كافياً من الراحة وتنفس بعمق؛ فالجهد يحتاج إلى راحة لتجديد الطاقة. إذا كان هناك أي مهام تثقل كاهلك أو تود تفريغ ما يشغل بالك، فأنا هنا بجانبك دائماً للاستماع والمساعدة.`;
     } else {
-      return `Take it easy and be kind to yourself. Rest is essential. If there are tasks overwhelming you that you'd like me to help organize or simplify, I'm here for you.`;
+      return `Take it easy and give yourself time to rest. If you need someone to organize tasks or simply talk through things, I'm right here with you.`;
     }
   }
 
-  // 5. Gratitude / Thanks
+  // 7. Gratitude / Thanks
   const isThanks =
     /شكرا|مشكور|تسلم|يعطيك العافية|بارك الله فيك|جزاك الله خيرا|ألف شكر|thank you|thanks|appreciate it/i.test(
-      trimmed
+      cleaned
     );
 
   if (isThanks) {
     if (isArabic) {
-      return `العفو بكل سرور! يسعدني دائماً تقديم الدعم لك، وأنا حاضر لأي استفسار أو خطوة قادمة.`;
+      return `العفو بكل سرور وسعادة! يسعدني دائماً تقديم العون لك، وأنا رهن إشارتك في أي وقت لكل ما تحتاجه.`;
     } else {
-      return `You are most welcome! Always here whenever you need assistance.`;
+      return `You are most welcome! Always delighted to be of service.`;
     }
   }
 
-  // 6. Coding & Technical requests
+  // 8. Coding & Technical requests
   const isCodingRequest =
     /كود|برمجة|برمج|دالة|خوارزم|تطبيق|موقع|رياكت|تايب سكريبت|جافا سكريبت|بايثون|html|css|javascript|typescript|python|react|code|function|bug|api|database|sql/i.test(
-      trimmed
+      cleaned
     );
 
   if (isCodingRequest || engineId === 'syntactic-logic') {
@@ -123,7 +128,7 @@ How can I assist you right now?`;
       return `بخصوص طلبك البرمجي: إليك نموذجاً تطبيقياً معيارياً ومباشراً:
 
 \`\`\`typescript
-// نموذج تنفيذي نظيف ومرن
+// نمط برمجي نظيف، آمن، ومباشر
 export async function executeTask<T>(task: () => Promise<T>): Promise<{ success: boolean; data?: T; error?: string }> {
   try {
     const result = await task();
@@ -135,9 +140,9 @@ export async function executeTask<T>(task: () => Promise<T>): Promise<{ success:
 }
 \`\`\`
 
-يمكنك مشاركة مقتطف الكود أو الخطأ البرمجي المحدد الذي تواجهه وسأقوم بفحصه وتصحيحه معك خطوة بخطوة.`;
+شاركني مقتطف الكود أو المشكلة المحددة التي تواجهها وسنقوم بحلها وضبطها فوراً.`;
     } else {
-      return `Regarding your technical request, here is a clean, robust pattern:
+      return `Regarding your code request, here is a clean, standard pattern:
 
 \`\`\`typescript
 export async function handleTask<T>(fn: () => Promise<T>) {
@@ -150,50 +155,60 @@ export async function handleTask<T>(fn: () => Promise<T>) {
 }
 \`\`\`
 
-Feel free to paste your specific code snippet or error log, and I'll optimize it directly.`;
+Feel free to share the exact snippet or bug you are dealing with, and I'll resolve it directly!`;
     }
   }
 
-  // 7. Pulse Velocity (Actionable concise items)
+  // 9. Pulse Velocity (Actionable concise items)
   if (engineId === 'pulse-velocity') {
     if (isArabic) {
-      return `ملخص تنفيذي ونقاط عمل مباشرة:
+      return `خلاصة سريعة وقرار تنفيذي فوري:
+- **المحور:** ${trimmed.slice(0, 60)}
+- **الخطوة الأولى:** تحديد الأولوية القصوى وحصر المطلوب بدقة.
+- **التنفيذ:** البدء فوراً في الخطوة المباشرة وقياس النتيجة.
 
-* **الهدف:** معالجة مسألة "${trimmed.slice(0, 45)}" بتركيز وسرعة.
-* **الخطوات الفورية:**
-  1. مراجعة الأولويات وتحديد المخرج المطلوب بدقة.
-  2. تنفيذ الخطوة الأساسية واختبار النتيجة الأولية.
-  3. استكمال باقي المراحل بناءً على التغذية الراجعة.
-
-ما هي النقطة التي تريد البدء بها فوراً؟`;
+أنا جاهز للانتقال معك للخطوة التالية.`;
     } else {
-      return `Executive Brief & Direct Action:
-* **Focus:** "${trimmed.slice(0, 45)}"
-* **Action Items:**
-  1. Define target outcome and core constraints.
-  2. Execute primary step and review feedback.
-  3. Finalize next milestones.
+      return `Executive summary & action items:
+- **Target:** ${trimmed.slice(0, 60)}
+- **Action:** Define priority, execute core step, evaluate output.
 
 Ready for your next directive.`;
     }
   }
 
-  // 8. Natural fallback addressing the user's prompt directly
+  // 10. Intelligent & Natural conversational response for general questions
+  const isQuestion =
+    /^(ما|ماذا|كيف|لماذا|أين|متى|هل|ما رأيك|وضح|اشرح|ماهي|ما هو|من هو|من هي|what|how|why|where|when|is|can|explain)/i.test(
+      cleaned
+    ) || /[؟\?]/.test(trimmed);
+
+  if (isQuestion) {
+    if (isArabic) {
+      return `أهلاً بك. بالنسبة لسؤالك حول "${trimmed}":
+
+هذه مسألة هامة، ويمكن النظر إليها من زوايا متعددة:
+- **الفكرة الأساسية:** فهم السياق والهدف المباشر هو المفتاح للوصول إلى أدق إجابة.
+- **الرؤية العملية:** تطبيق أفضل الممارسات الموثوقة والتركيز على الحلول الواقعية والمجدية.
+
+تفضل بتحديد أي جانب معين ترغب في أن نتعمق في تفاصيله ونناقشه معاً، وأنا معك خطوة بخطوة.`;
+    } else {
+      return `Thank you for your question regarding "${trimmed}".
+
+To look at this effectively:
+- **Core Concept:** Understanding the core context and intended goal is essential for a precise answer.
+- **Practical Application:** Applying proven best practices and focusing on tangible solutions.
+
+Let me know which specific dimension you would like to explore deeper!`;
+    }
+  }
+
+  // 11. General conversational response
   if (isArabic) {
-    return `بخصوص ما تفضلت بطرحه: "${trimmed.slice(0, 80)}${trimmed.length > 80 ? '...' : ''}"
+    return `أنا معك ومتابع معك بكل اهتمام. ما طرحته يستحق النقاش، ويسعدني أن نتطرق إليه بتفصيل أكبر.
 
-أنا معك تماماً في نفس الموضوع؛ إليك النقاط الأساسية المتعلقة به:
-1. **الجانب الأهم:** دراسة الفكرة من زاوية الأهداف المباشرة والنتائج المتوقعة.
-2. **الخطوة العملية:** تحديد العناصر المؤثرة والتعامل معها بشكل تدريجي ومنظم.
-
-تفضل بتوضيح أي تفصيل إضافي أو جانب محدد تود أن نركز عليه أكثر لنصل للحل الأمثل.`;
+ما هي النقطة المحددة التي تود أن نبدأ بها أو نركز عليها؟`;
   } else {
-    return `Regarding your inquiry: "${trimmed.slice(0, 80)}${trimmed.length > 80 ? '...' : ''}"
-
-I am tracking this topic closely with you:
-1. **Core Insight:** Focus on the primary objectives and practical implications.
-2. **Next Step:** Break down the variables and address them methodically.
-
-Let me know which specific angle you'd like to delve into further.`;
+    return `I am tracking this closely with you. It is a worthwhile topic to explore. Which specific aspect would you like to begin with?`;
   }
 }
