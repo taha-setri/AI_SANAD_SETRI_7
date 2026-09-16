@@ -1,0 +1,8 @@
+{
+  "name": "Remix Sanad setri",
+  "description": "منصة موحدة لمحركات الذكاء المتخصصة مع خصوصية تامة، بحث موحد، لوحة تحكم للمهام، ومزامنة مشفرة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
