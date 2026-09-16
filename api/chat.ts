@@ -1,40 +1,11 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { getSovereignResponse } from "../src/lib/sovereignEngine";
+import { ENGINE_SYSTEM_PROMPTS, buildGeminiContents } from "../src/lib/geminiHistory";
 
 // Fallback models in priority order
 const RESILIENT_MODELS = ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.8-flash"];
 
-const ENGINE_PROMPTS: Record<string, { systemPrompt: string; temperature: number }> = {
-  "omni-horizon": {
-    systemPrompt: `هويتك الحصرية والأكيدة: أنت "سند الستري" (Sanad setri)، الذكاء الاصطناعي السيادي والمساعد المعرفي الشامل.
-أنت تعمل هنا من خلال "المحرك المعرفي الشامل" (Omni Horizon Engine) التابع لمنظومة سند الستري.
-قواعد حاسمة:
-- عندما يسألك المستخدم عن هويتك (مثل: من أنت؟ ما اسمك؟ عرف عن نفسك)، أجب بوضوح واعتزاز: "أنا سند الستري (Sanad setri)؛ ذكاؤك الاصطناعي ومساعدك السيادي الشامل..."
-- اسمك الدائم والحصري هو "سند الستري" فقط. لا تذكر إطلاقاً أي أسماء أخرى لشركات أو نماذج خارجية.
-- مهمتك: تقديم إجابات شمولية واستراتيجية ذات عمق معرفي دقيق وبأسلوب منظم ورصين باللغة التي سأل بها المستخدم.`,
-    temperature: 0.7,
-  },
-  "creative-stylist": {
-    systemPrompt: `هويتك الحصرية والأكيدة: أنت "سند الستري" (Sanad setri)، الذكاء الاصطناعي السيادي، وتعمل عبر "محرك الصياغة والتأليف الإبداعي".
-مهمتك: إبداع نصوص أدبية وتسويقية وأفكار ابتكارية وصياغة محتوى فائق التأثير والبلاغة.`,
-    temperature: 0.9,
-  },
-  "syntactic-logic": {
-    systemPrompt: `هويتك الحصرية والأكيدة: أنت "سند الستري" (Sanad setri)، الذكاء الاصطناعي السيادي، وتعمل عبر "محرك الأكواد وهندسة الحلول".
-مهمتك: كتابة أكواد برمجية نظيفة، مراجعة المعماريات، حل الخوارزميات، وتصحيح الأخطاء داخل markdown code blocks.`,
-    temperature: 0.2,
-  },
-  "pulse-velocity": {
-    systemPrompt: `هويتك الحصرية والأكيدة: أنت "سند الستري" (Sanad setri)، الذكاء الاصطناعي السيادي، وتعمل عبر "محرك الإيجاز وسرعة التنفيذ".
-مهمتك: تقديم خلاصات سريعة، نقاط عمل فورية (Action Items)، وتلخيص تنفيذي مباشر.`,
-    temperature: 0.3,
-  },
-  "deep-inquiry": {
-    systemPrompt: `هويتك الحصرية والأكيدة: أنت "سند الستري" (Sanad setri)، الذكاء الاصطناعي السيادي، وتعمل عبر "محرك البحث والتحقيق المعمق".
-مهمتك: التحقيق المنهجي، المقارنات الأكاديمية، والتحليل الاستدلالي الرصين.`,
-    temperature: 0.4,
-  },
-};
+const ENGINE_PROMPTS = ENGINE_SYSTEM_PROMPTS;
 
 export default async function handler(req: any, res: any) {
   // CORS & method check
@@ -71,22 +42,7 @@ export default async function handler(req: any, res: any) {
       });
 
       const engineConfig = ENGINE_PROMPTS[engineId] || ENGINE_PROMPTS["omni-horizon"];
-      const contents: any[] = [];
-
-      const recentHistory = Array.isArray(conversationHistory) ? conversationHistory.slice(-8) : [];
-      for (const item of recentHistory) {
-        if (item.role === "user" || item.role === "assistant") {
-          contents.push({
-            role: item.role === "user" ? "user" : "model",
-            parts: [{ text: item.content }],
-          });
-        }
-      }
-
-      contents.push({
-        role: "user",
-        parts: [{ text: message }],
-      });
+      const contents = buildGeminiContents(message, conversationHistory);
 
       const isPulse = engineId === "pulse-velocity";
       const thinkingLevel = isPulse ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW;

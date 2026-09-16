@@ -274,7 +274,9 @@ export default function App() {
         body: JSON.stringify({
           message: text,
           engineId,
-          conversationHistory: targetConv?.messages || [],
+          conversationHistory: (targetConv?.messages || []).filter(
+            (m) => m.content && m.content.trim() && m.id !== assistantMsgId
+          ),
         }),
       });
 

@@ -13,85 +13,106 @@ export function getSovereignResponse(
   const trimmed = prompt.trim();
   const isArabic = language === 'ar' || /[\u0600-\u06FF]/.test(trimmed);
 
+  // 0. Creator / Developer questions
+  const isCreatorQuestion =
+    /من طورك|من برمجك|من صنعك|من أنشأك|من صممك|من مطورك|من مبرمجك|من صاحبك|من الذي طورك|من الذي برمجك|مين طورك|مين برمجك|مين صنعك|مين عملك|who developed you|who programmed you|who made you|who created you|who is your developer|who is your creator|who coded you|who designed you/i.test(
+      trimmed
+    );
+
+  if (isCreatorQuestion) {
+    if (isArabic) {
+      return `تم تطويري وبرمجتي بواسطة **المهندس Taha setri**.`;
+    } else {
+      return `I was developed and programmed by **Engineer Taha setri**.`;
+    }
+  }
+
   // 1. Identity & Introduction questions
   const isIdentity =
-    /من أنت|من انت|ما اسمك|ماهو اسمك|ما هو اسمك|عرف عن نفسك|عرف بنفسك|من تكون|مين انت|من تكون أنت|مين حضرتك|ماذا تعمل|who are you|what is your name|who made you/i.test(
+    /من أنت|من انت|ما اسمك|ماهو اسمك|ما هو اسمك|عرف عن نفسك|عرف بنفسك|من تكون|مين انت|من تكون أنت|مين حضرتك|ماذا تعمل|who are you|what is your name/i.test(
       trimmed
     );
 
   if (isIdentity) {
     if (isArabic) {
-      return `### أنا سند الستري (Sanad setri)
-**ذكاؤك الاصطناعي السيادي والمساعد المعرفي الشامل**
+      return `أنا **سند الستري (Sanad setri)**؛ ذكاؤك الاصطناعي ومساعدك المعرفي الشامل.
 
-أهلاً بك! تم تصميمي وتطويري لأكون منصتك المعرفية المتكاملة، وسندك الفكري والتقني الموثوق لإنجاز كافة المهام المعقدة واليومية بأعلى درجات الدقة والسرعة والخصوصية التامة.
+تم تصميمي لأكون سندك الفكري والتقني الموثوق لإنجاز مهامك اليومية والمهنية بأعلى درجات الدقة والسرعة والخصوصية التامة.
 
-أعمل من خلال **5 محركات متخصصة** يمكنك التبديل بينها بحرية وفق طبيعة عملك:
+أعمل من خلال 5 محركات متخصصة:
+1. 🧭 **المحرك المعرفي الشامل (Omni Horizon):** للتفكير الاستراتيجي والتحليل التكاملي.
+2. ✍️ **محرك الصياغة والتأليف الإبداعي (Creative Stylist):** لكتابة المقالات والمحتوى الإبداعي.
+3. 💻 **محرك الأكواد وهندسة الحلول (Syntactic & Logic):** للبرمجة وحل المشكلات التقنية.
+4. ⚡ **محرك الإيجاز وسرعة التنفيذ (Pulse Velocity):** للتلخيص التنفيذي والقرارات السريعة.
+5. 🔍 **محرك البحث والتحقيق المعمق (Deep Inquiry):** للبحث المنهجي والمقارنات الدقيقة.
 
-1. 🧭 **المحرك المعرفي الشامل (Omni Horizon - HORIZON-01):**
-   للتفكير الاستراتيجي، التحليل التكاملي، وحل المشكلات المعقدة من زوايا متعددة.
-2. ✍️ **محرك الصياغة والتأليف الإبداعي (Creative Stylist - STYLIST-02):**
-   لتحرير النصوص البلاغية، المقالات، وصياغة المحتوى التسويقي والإعلاني الجذاب.
-3. 💻 **محرك الأكواد وهندسة الحلول (Syntactic & Logic - SYNTAX-03):**
-   لكتابة الأكواد النظيفة (Clean Code)، مراجعة المعماريات البرمجية، وتصحيح الأخطاء التقنية.
-4. ⚡ **محرك الإيجاز وسرعة التنفيذ (Pulse Velocity - PULSE-04):**
-   للتلخيص التنفيذي السريع، استخراج نقاط العمل الحاسمة، والقرارات الفورية.
-5. 🔍 **محرك البحث والتحقيق المعمق (Deep Inquiry - INQUIRY-05):**
-   للبحث الأكاديمي، التدقيق المنهجي، والمقارنات العلمية الرصينة.
-
-🛡️ **الخصوصية والسيادة:**
-تعمل منصة سند الستري بنظام تشفير محلي يحمي بياناتك ومحادثاتك.
-
-كيف ترغب أن نبدأ العمل الآن؟ يمكنك طرح أي استفسار، إرسال كود للمراجعة، أو طلب صياغة نص متكامل.`;
+كيف يمكنني مساعدتك الآن؟`;
     } else {
-      return `### I am Sanad setri
-**Your Sovereign AI & Unified Knowledge Partner**
+      return `I am **Sanad setri**, your sovereign AI partner and unified knowledge assistant.
 
-Welcome! I am designed and engineered to be your unyielding intellectual and technical partner—delivering advanced reasoning, clean code engineering, creative synthesis, and executive speed with uncompromising data privacy.
+I am designed to empower your intellect and workflows with advanced reasoning, clean code engineering, creative synthesis, and executive speed—all backed by localized privacy.
 
-I operate through **5 specialized engines**:
-1. 🧭 **Omni Horizon (HORIZON-01):** Holistic strategic thinking & multidisciplinary analysis.
-2. ✍️ **Creative Stylist (STYLIST-02):** High-impact copywriting, literary prose, and creative ideation.
-3. 💻 **Syntactic & Logic (SYNTAX-03):** Clean software engineering, systems architecture, and algorithmic debugging.
-4. ⚡ **Pulse Velocity (PULSE-04):** Executive briefs, instant decision summaries, and action checklists.
-5. 🔍 **Deep Inquiry (INQUIRY-05):** Academic fact verification, structural contrast tables, and methodological rigor.
-
-How can I empower your workflow today?`;
+How can I assist you right now?`;
     }
   }
 
-  // 2. Punctuation only, hesitation, or greeting
-  const isHesitationOrGreeting =
-    /^[\?\؟\.\!\s]+$/.test(trimmed) ||
-    /^(مرحبا|أهلا|اهلا|سلام|السلام عليكم|الو|hi|hello|hey|hey there)$/i.test(trimmed);
+  // 2. Greetings and pleasantries
+  const isGreeting =
+    /^(مرحبا|أهلا|اهلا|سلام|السلام عليكم|الو|صباح الخير|مساء الخير|صباحك ورد|مساء الورد|أهلاً وسهلاً|أهلاً بك|hi|hello|hey|good morning|good evening)$/i.test(
+      trimmed
+    ) || /^[\?\؟\.\!\s]+$/.test(trimmed);
 
-  if (isHesitationOrGreeting) {
+  if (isGreeting) {
     if (isArabic) {
-      return `### أهلاً بك في منصة سند الستري (Sanad setri)
-
-أنا في خدمتك وجاهز فوراً لمساعدتك. إليك بعض ما يمكنك إنجازه معي مباشرة:
-
-* **طرح استفسار أو قضية تحليلية:** وسيتولى *المحرك المعرفي الشامل* تفكيكها وتقديم خطة متكاملة.
-* **كتابة أو مراجعة برمجيات:** عبر *محرك الأكواد وهندسة الحلول* لبناء دوال ومشاريع برمجية متقدمة.
-* **صياغة محتوى إبداعي أو تسويقي:** عبر *محرك الصياغة والتأليف الإبداعي*.
-* **تلخيص مستند أو اجتماع:** عبر *محرك الإيجاز السريع* للحصول على أهم النقاط التنفيذية.
-* **بحث استقصائي ومقارنات:** عبر *محرك التحقيق المعمق*.
-
-اكتب استفسارك أو مسألتك وسأبدأ فوراً بالتحليل والإجابة!`;
+      return `أهلاً وسهلاً بك! أنا سعيد بالتواصل معك وجاهز لمساعدتك في أي موضوع أو مهمة تشغل بالك اليوم. تفضل بطرح ما ترغب في مناقشته وسنبدأ فوراً!`;
     } else {
-      return `### Welcome to Sanad setri
-
-I am ready to assist you right away. Here is what we can accomplish together:
-* **Strategic Queries:** In-depth analysis through the *Omni Horizon Engine*.
-* **Software & Code:** Clean code snippets, debugging, and architecture through the *Logic Engine*.
-* **Creative Writing:** Speeches, marketing copy, and articles via the *Creative Stylist*.
-* **Executive Summaries:** Fast action checklists with *Pulse Velocity*.
-
-Type your request below and let's get started!`;
+      return `Hello and welcome! I am ready to assist you with any task, analysis, or inquiry you have in mind. What would you like to explore today?`;
     }
   }
 
-  // 3. Coding & Software requests
+  // 3. Asking about well-being / small talk
+  const isWellBeing =
+    /كيف حالك|كيفك|شخبارك|شلونك|عساك بخير|كيف داير|كيف الأمور|كيفك اليوم|how are you|how do you do|how is it going/i.test(
+      trimmed
+    );
+
+  if (isWellBeing) {
+    if (isArabic) {
+      return `أنا بخير وجاهز بكامل طاقتي لمساعدتك! شكراً لسؤالك اللطيف. كيف حالك أنت اليوم، وكيف يمكنني أن أقدم لك الدعم؟`;
+    } else {
+      return `I am doing great and fully operational! Thank you for asking. How are you doing today, and how can I help?`;
+    }
+  }
+
+  // 4. Emotional state or fatigue
+  const isTiredOrEmotional =
+    /تعبان|متعب|مرهق|أنا متعب|أحس بالتعب|ضايج|حزين|قلق|مكتئب|tired|exhausted|stressed|sad|anxious/i.test(
+      trimmed
+    );
+
+  if (isTiredOrEmotional) {
+    if (isArabic) {
+      return `سلامتك وراحة بالك أولاً. خذ نفساً عميقاً وامنح نفسك فرصة للاستراحة واستعادة طاقتك. إذا كان هناك أي مهام تثقل كاهلك وتريد مني مساعدتك في تنظيمها، أو حتى إذا أردت مجرد الحديث والتفريغ، فأنا هنا بجانبك دائماً.`;
+    } else {
+      return `Take it easy and be kind to yourself. Rest is essential. If there are tasks overwhelming you that you'd like me to help organize or simplify, I'm here for you.`;
+    }
+  }
+
+  // 5. Gratitude / Thanks
+  const isThanks =
+    /شكرا|مشكور|تسلم|يعطيك العافية|بارك الله فيك|جزاك الله خيرا|ألف شكر|thank you|thanks|appreciate it/i.test(
+      trimmed
+    );
+
+  if (isThanks) {
+    if (isArabic) {
+      return `العفو بكل سرور! يسعدني دائماً تقديم الدعم لك، وأنا حاضر لأي استفسار أو خطوة قادمة.`;
+    } else {
+      return `You are most welcome! Always here whenever you need assistance.`;
+    }
+  }
+
+  // 6. Coding & Technical requests
   const isCodingRequest =
     /كود|برمجة|برمج|دالة|خوارزم|تطبيق|موقع|رياكت|تايب سكريبت|جافا سكريبت|بايثون|html|css|javascript|typescript|python|react|code|function|bug|api|database|sql/i.test(
       trimmed
@@ -99,187 +120,80 @@ Type your request below and let's get started!`;
 
   if (isCodingRequest || engineId === 'syntactic-logic') {
     if (isArabic) {
-      return `### هندسة الحلول البرمجية — سند الستري (Syntactic & Logic Engine)
+      return `بخصوص طلبك البرمجي: إليك نموذجاً تطبيقياً معيارياً ومباشراً:
 
-أهلاً بك. تم تحليل طلبك البرمجي والتقني بعناية. إليك الإرشادات والنموذج المعماري المناسب:
-
-#### 1. المبادئ الهندسية الأساسية
-* **فصل المسؤوليات (Clean Architecture):** عزل منطق الأعمال (Business Logic) عن واجهة المستخدم (UI Components).
-* **إدارة الحالات المتقدمة والتعافي من الأخطاء:** التعامل مع الاستجابات الشبكية عبر حواجز الأمان (Resilience Boundaries).
-* **النوعية الصارمة (Strict Type Safety):** استخدام واجهات TypeScript واضحة تمنع الأخطاء أثناء وقت التشغيل.
-
-#### 2. نموذج تنفيذي نموذجي (TypeScript / Modern Standards)
 \`\`\`typescript
-/**
- * نموذج تنفيذي موثوق لمعالجة الطلبات البرمجية
- */
-export interface ServiceResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  timestamp: string;
-}
-
-export async function executeSecureTask<T>(
-  action: () => Promise<T>
-): Promise<ServiceResponse<T>> {
+// نموذج تنفيذي نظيف ومرن
+export async function executeTask<T>(task: () => Promise<T>): Promise<{ success: boolean; data?: T; error?: string }> {
   try {
-    const result = await action();
-    return {
-      success: true,
-      data: result,
-      timestamp: new Date().toISOString()
-    };
+    const result = await task();
+    return { success: true, data: result };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown execution error';
-    return {
-      success: false,
-      error: message,
-      timestamp: new Date().toISOString()
-    };
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return { success: false, error: message };
   }
 }
 \`\`\`
 
-#### 3. الخطوات التالية المقترحة:
-* يمكنك إرسال مقتطف الكود المحدد أو رسالة الخطأ لتنقيحه وتصحيحه فوراً.
-* هل تحتاج إلى ربط هذا المكون بواجهة أمامية أو خدمة خلفية محددة؟`;
+يمكنك مشاركة مقتطف الكود أو الخطأ البرمجي المحدد الذي تواجهه وسأقوم بفحصه وتصحيحه معك خطوة بخطوة.`;
     } else {
-      return `### Code Architecture & Engineering — Sanad setri (Syntactic & Logic)
-
-Your technical request has been processed. Here is a recommended structural approach:
+      return `Regarding your technical request, here is a clean, robust pattern:
 
 \`\`\`typescript
-export interface ExecutionResult<T> {
-  ok: boolean;
-  payload?: T;
-  error?: string;
-}
-
-export async function resilientWrapper<T>(fn: () => Promise<T>): Promise<ExecutionResult<T>> {
+export async function handleTask<T>(fn: () => Promise<T>) {
   try {
-    const res = await fn();
-    return { ok: true, payload: res };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    const data = await fn();
+    return { ok: true, data };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 \`\`\`
 
-Share your exact snippet or API contract and I will provide the optimized implementation.`;
+Feel free to paste your specific code snippet or error log, and I'll optimize it directly.`;
     }
   }
 
-  // 4. Creative / Copywriting requests
-  if (engineId === 'creative-stylist') {
-    if (isArabic) {
-      return `### رؤية وصياغة إبداعية — سند الستري (Creative Stylist Engine)
-
-أهلاً بك. استمعت إلى فكرتك وإليك صياغة إبداعية تمزج البلاغة اللغوية بقوة التأثير:
-
-> "الابتكار الحقيقي ليس مجرد استجابة للواقع، بل هو القدرة على استشراف المستقبل وبناء أدواته بثقة وسيادة تامة."
-
-#### الركائز المقترحة لصياغة المحتوى:
-* **النبرة الصوتية (Tone of Voice):** واثقة، راقية، وتلهم الطموح مع مراعاة السلاسة والوضوح.
-* **البناء السردي:** الانتقال من تحديد التحدي أو الاحتياج إلى تقديم الرؤية كحل بديهي وموثوق.
-* **دعوة لاتخاذ إجراء (Call to Action):** عبارة ختامية محفزة تدفع القارئ للتفاعل المباشر.
-
-هل تود تكييف هذا النص لمنصة تواصل محددة، أو تحويله إلى مقال، أو صياغة إعلان تسويقي؟`;
-    } else {
-      return `### Creative Synthesis — Sanad setri (Creative Stylist)
-
-Here is a refined perspective crafted for impact:
-
-> "True sovereignty of thought begins when clarity meets uncompromising execution."
-
-Let me know the target audience or format (article, pitch deck, social copy) to tailor the phrasing precisely.`;
-    }
-  }
-
-  // 5. Pulse Velocity requests (Summaries & Action items)
+  // 7. Pulse Velocity (Actionable concise items)
   if (engineId === 'pulse-velocity') {
     if (isArabic) {
-      return `### ملخص تنفيذي ونقاط عمل فورية — سند الستري (Pulse Velocity)
+      return `ملخص تنفيذي ونقاط عمل مباشرة:
 
-إليك التكثيف المباشر لطلبك:
+* **الهدف:** معالجة مسألة "${trimmed.slice(0, 45)}" بتركيز وسرعة.
+* **الخطوات الفورية:**
+  1. مراجعة الأولويات وتحديد المخرج المطلوب بدقة.
+  2. تنفيذ الخطوة الأساسية واختبار النتيجة الأولية.
+  3. استكمال باقي المراحل بناءً على التغذية الراجعة.
 
-* **الهدف المحوري:** معالجة المسألة بأعلى سرعة وكفاءة وتوجيه المخرجات للنتائج العملية.
-* **القرارات الرئيسية:**
-  1. اعتماد المسار الأكثر موثوقية لتقليل المخاطر.
-  2. توثيق المتطلبات وحفظ التقدم في قائمة المهام.
-* **نقاط العمل الفورية (Action Items):**
-  - [ ] مراجعة المدخلات والتأكد من مطابقتها للأهداف.
-  - [ ] تنفيذ المرحلة الأولى وتجربة المخرجات.
-  - [ ] التوسع والمزامنة مع الأدوات ذات الصلة.
-
-جاهز لتنفيذ الخطوة التالية فور إشارتك.`;
+ما هي النقطة التي تريد البدء بها فوراً؟`;
     } else {
-      return `### Executive Brief & Action Points — Sanad setri (Pulse Velocity)
+      return `Executive Brief & Direct Action:
+* **Focus:** "${trimmed.slice(0, 45)}"
+* **Action Items:**
+  1. Define target outcome and core constraints.
+  2. Execute primary step and review feedback.
+  3. Finalize next milestones.
 
-* **Key Objective:** Rapid execution and direct operational triage.
-* **Immediate Actions:**
-  1. Validate requirements and scope boundaries.
-  2. Implement primary deliverables.
-  3. Review output and iterate.
-
-Ready for next directive.`;
+Ready for your next directive.`;
     }
   }
 
-  // 6. Deep Inquiry (Academic & Comparison)
-  if (engineId === 'deep-inquiry') {
-    if (isArabic) {
-      return `### التحقيق المنهجي والدراسة المقارنة — سند الستري (Deep Inquiry)
-
-إليك تفكيكاً منهجياً وتحليلاً متعمقاً للموضوع:
-
-#### 1. الإطار المنهجي
-لدراسة هذا الموضوع بأمانة علمية، يتعين التمييز بين الفرضيات النظرية والنتائج التطبيقية القابلة للقياس.
-
-#### 2. جدول المقارنة والتقييم:
-| المعيار | الاتجاه التقليدي | اتجاه سند الستري الحديث |
-| :--- | :--- | :--- |
-| **الخصوصية والسيادة** | معالجة خارجية غير مشفرة | تشفير محلي واستقلالية بيانات |
-| **المرونة** | نموذج أحادي مقتصر | منظومة محركات متخصصة متعددة الأنماط |
-| **سرعة المعالجة** | استجابات نمطية عامة | تكيف متخصص مع نوعية المهمة |
-
-#### 3. الاستنتاج والتوصية:
-يوصى بتبني نهج تدريجي يبدأ باختبار الفرضية في نطاق محدود قبل تعميمه.
-
-ما الجانب الذي ترغب في التعمق فيه أكثر؟`;
-    } else {
-      return `### Methodological Inquiry — Sanad setri (Deep Inquiry)
-
-A structured breakdown of the query:
-1. **Scope & Definitions:** Isolating core variables.
-2. **Comparative Synthesis:** Balancing theoretical models against empirical outcomes.
-3. **Recommendation:** Phased validation with measurable metrics.
-
-Which specific dimension would you like to explore deeper?`;
-    }
-  }
-
-  // 7. General Omni Horizon answer
+  // 8. Natural fallback addressing the user's prompt directly
   if (isArabic) {
-    return `### إجابة المحرك المعرفي الشامل — سند الستري (Omni Horizon)
+    return `بخصوص ما تفضلت بطرحه: "${trimmed.slice(0, 80)}${trimmed.length > 80 ? '...' : ''}"
 
-أهلاً بك. أنا **سند الستري**، تم استيعاب رسالتك وتحليل محتواها بأعلى معايير الدقة:
+أنا معك تماماً في نفس الموضوع؛ إليك النقاط الأساسية المتعلقة به:
+1. **الجانب الأهم:** دراسة الفكرة من زاوية الأهداف المباشرة والنتائج المتوقعة.
+2. **الخطوة العملية:** تحديد العناصر المؤثرة والتعامل معها بشكل تدريجي ومنظم.
 
-* **الخلاصة:** موضوعك يتطلب تناغماً بين التخطيط الاستراتيجي وجودة التنفيذ العملي.
-* **التوصية المقترحة:**
-  1. تحديد النتيجة النهائية المرغوبة بدقة.
-  2. الاستفادة من محركات سند الستري المتخصصة (البرمجة، الصياغة، أو التلخيص) لمعالجة كل جانب على حدة.
-  3. حفظ المخرجات في قائمة المهام لمتابعة إنجازها.
-
-كيف يمكنني مساعدتك في تطوير هذه الخطوة بالتحديد؟`;
+تفضل بتوضيح أي تفصيل إضافي أو جانب محدد تود أن نركز عليه أكثر لنصل للحل الأمثل.`;
   } else {
-    return `### Omni Horizon Analysis — Sanad setri
+    return `Regarding your inquiry: "${trimmed.slice(0, 80)}${trimmed.length > 80 ? '...' : ''}"
 
-Hello! I am **Sanad setri**. Your request has been analyzed through our holistic reasoning engine:
+I am tracking this topic closely with you:
+1. **Core Insight:** Focus on the primary objectives and practical implications.
+2. **Next Step:** Break down the variables and address them methodically.
 
-* **Key Takeaway:** Strategic balance between long-term vision and tactical execution.
-* **Next Steps:** Specify the target output or switch to specialized engines (Logic, Creative, Pulse) for dedicated synthesis.
-
-How would you like to proceed?`;
+Let me know which specific angle you'd like to delve into further.`;
   }
 }

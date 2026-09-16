@@ -86,7 +86,11 @@ export const ChatStudio: React.FC<ChatStudioProps> = ({
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: query, engineId: secondaryEngineId }),
+          body: JSON.stringify({
+            message: query,
+            engineId: secondaryEngineId,
+            conversationHistory: conversation.messages.filter((m) => m.content && m.content.trim()),
+          }),
         });
         const contentType = res.headers.get('content-type') || '';
         if (res.ok && contentType.includes('application/json')) {
