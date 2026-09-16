@@ -25,6 +25,7 @@ import {
   loadFounderDemoData
 } from './lib/storage';
 import { UNIFIED_ENGINES, INITIAL_CONVERSATIONS, INITIAL_TASKS } from './lib/constants';
+import { getSovereignResponse } from './lib/sovereignEngine';
 import { Header } from './components/Header';
 import { CloudSyncModal } from './components/CloudSyncModal';
 import { VisionSearchPortal } from './components/VisionSearchPortal';
@@ -276,8 +277,9 @@ export default function App() {
         }),
       });
 
-      if (!response.ok || !response.body) {
-        throw new Error('Stream request failed');
+      const contentType = response.headers.get('content-type') || '';
+      if (!response.ok || !response.body || !contentType.includes('text/event-stream')) {
+        throw new Error('Streaming endpoint unavailable or not SSE');
       }
 
       const reader = response.body.getReader();
@@ -323,6 +325,10 @@ export default function App() {
         }
       }
 
+      if (!accumulatedText.trim()) {
+        throw new Error('Empty stream response');
+      }
+
       const latencyMs = Date.now() - startTime;
       const estimatedTokens = Math.round((text.length + accumulatedText.length) / 3.8);
 
@@ -335,7 +341,7 @@ export default function App() {
                   m.id === assistantMsgId
                     ? {
                         ...m,
-                        content: accumulatedText || (userPreferences.language === 'ar' ? 'تمت معالجة الطلب.' : 'Processed.'),
+                        content: accumulatedText,
                         latencyMs,
                         estimatedTokens,
                       }
@@ -353,9 +359,9 @@ export default function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text }),
         })
-          .then((res) => res.json())
+          .then((res) => (res.ok && res.headers.get('content-type')?.includes('application/json') ? res.json() : null))
           .then((catData) => {
-            if (catData.category) {
+            if (catData?.category) {
               const catMap: Record<string, ContentCategory> = {
                 'برمجة وحلول تقنية': 'code',
                 'صياغة ومحتوى إبداعي': 'creative',
@@ -382,7 +388,7 @@ export default function App() {
           .catch(() => {});
       }
     } catch (error) {
-      console.error('Chat stream error, attempting fallback:', error);
+      console.warn('Chat stream not available, engaging sovereign fallback engine:', error);
       try {
         const fallbackRes = await fetch('/api/chat', {
           method: 'POST',
@@ -393,7 +399,14 @@ export default function App() {
             conversationHistory: targetConv?.messages || [],
           }),
         });
+        const fbContentType = fallbackRes.headers.get('content-type') || '';
+        if (!fallbackRes.ok || !fbContentType.includes('application/json')) {
+          throw new Error('Standard API route unavailable or returned non-JSON');
+        }
         const fallbackData = await fallbackRes.json();
+        if (!fallbackData.content) {
+          throw new Error('No content returned from API');
+        }
         setConversations((prev) =>
           prev.map((c) =>
             c.id === targetConvId
@@ -403,7 +416,7 @@ export default function App() {
                     m.id === assistantMsgId
                       ? {
                           ...m,
-                          content: fallbackData.content || (userPreferences.language === 'ar' ? 'تمت معالجة الطلب.' : 'Processed.'),
+                          content: fallbackData.content,
                           latencyMs: fallbackData.latencyMs,
                           estimatedTokens: fallbackData.estimatedTokens,
                         }
@@ -414,6 +427,14 @@ export default function App() {
           )
         );
       } catch (fallbackErr) {
+        // High-Intelligence Client-Side Sovereign Response
+        const sovereignReply = getSovereignResponse(
+          text,
+          engineId,
+          userPreferences.language,
+          { isOfflineOrFallback: true }
+        );
+        const latencyMs = Date.now() - startTime;
         setConversations((prev) =>
           prev.map((c) =>
             c.id === targetConvId
@@ -423,9 +444,9 @@ export default function App() {
                     m.id === assistantMsgId
                       ? {
                           ...m,
-                          content: userPreferences.language === 'ar' 
-                            ? 'المحرك جاهز وتمت معالجة الطلب في بيئة العمل الآمنة.' 
-                            : 'Engine ready and processed securely.',
+                          content: sovereignReply,
+                          latencyMs,
+                          estimatedTokens: Math.round(sovereignReply.length / 3.8),
                         }
                       : m
                   ),

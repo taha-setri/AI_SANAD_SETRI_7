@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import dotenv from "dotenv";
+import { getSovereignResponse } from "./src/lib/sovereignEngine";
 
 dotenv.config();
 
@@ -90,44 +91,6 @@ const ENGINE_PROMPTS: Record<string, { systemPrompt: string; temperature: number
     temperature: 0.4,
   },
 };
-
-// Sovereign engine intelligent fallback responder for high-demand / quota limits
-function getSovereignResponse(prompt: string, engineId: string): string {
-  const isArabic = /[\u0600-\u06FF]/.test(prompt);
-
-  const isIdentityQuestion =
-    /من أنت|من انت|ما اسمك|ماهو اسمك|ما هو اسمك|عرف عن نفسك|عرف بنفسك|من تكون|مين انت|من تكون أنت|مين حضرتك|who are you|what is your name/i.test(
-      prompt
-    );
-
-  if (isIdentityQuestion) {
-    return isArabic
-      ? `أنا **سند الستري** (Sanad setri)، ذكاؤك الاصطناعي ومساعدك السيادي الشامل.\n\nتم تصميمي وتطويري لأكون سندك المتين وشريكك الفكري والتنفيذي الموثوق في شتى المجالات؛ من التفكير الاستراتيجي والتحليل الشامل، إلى هندسة البرمجيات وكتابة الأكواد، والصياغة الإبداعية، والتلخيص التنفيذي السريع، والتحقيق الأكاديمي والمنهجي—كل ذلك مع التزام مطلق بالسيادة وحماية خصوصيتك التامة.`
-      : `I am **Sanad setri**, your sovereign artificial intelligence and unified strategic assistant.\n\nEngineered to deliver unyielding support across holistic reasoning, software engineering, creative synthesis, and executive speed—with total data privacy and zero compromise.`;
-  }
-
-  if (isArabic) {
-    switch (engineId) {
-      case "syntactic-logic":
-        return `### تحليل برمجيات ومعمارية الحلول (Syntactic & Logic Engine)\n\nأنا **سند الستري**، تم فحص طلبك التقني بدقة:\n\n#### 1. النمط المعماري الموصى به:\n- **عزل المكونات (Component Decoupling):** الحفاظ على نقاء الوظائف البرمجية وسهولة اختبارها.\n- **المرونة والتعافي الذاتي (Self-Healing Architecture):** تطبيق استراتيجيات الـ Circuit Breaker وإعادة المحاولة مع تزايد فترات الانتظار (Exponential Backoff).\n- **الأمان والسيادة:** منع تسريب بيانات الجلسة وتشفير المدخلات الحساسة.\n\n\`\`\`typescript\n// مبدأ المعالجة الآمنة في Sanad setri\nexport async function resilientExecute<T>(\n  task: () => Promise<T>,\n  fallback: T\n): Promise<T> {\n  try {\n    return await task();\n  } catch {\n    return fallback;\n  }\n}\n\`\`\`\n\n*ملاحظة سيادية: تم تفعيل درع الحماية الذاتية لضمان استمرارية إنتاجيتك دون توقف.*`;
-
-      case "creative-stylist":
-        return `### الصياغة الإبداعية والرؤية البلاغية (Creative Stylist Engine)\n\nأنا **سند الستري**، إليك رؤية إبداعية تلهم الإنجاز وتبرز القيمة الفريدة لأفكارك:\n\n> "كل فكرة رائدة تبدأ برؤية واضحة، وتزدهر ببيئة عمل تمنحك السيادة الكاملة على وقتك وتركيزك."\n\n#### ركائز مقترحة لصياغة المحتوى:\n* **الاستهلال الجاذب:** البدء بعبارة افتتاحية تلامس احتياج المتلقي وتلفت انتباهه.\n* **البلاغة والاختصار:** إيصال جوهر الفكرة دون حشو أو إطالة غير ضرورية.\n* **الحث على الإنجاز (Action Call):** خطوة تالية سلسة وواضحة ترشد الخطوة القادمة.\n\n*ملاحظة سيادية: تمت الصياغة عبر درع الاستقلالية الموحد لـ Sanad setri.*`;
-
-      case "pulse-velocity":
-        return `### موجز تنفيذي فوري (Pulse Velocity Brief)\n\nأنا **سند الستري**، إليك الخلاصة المباشرة:\n\n* **الهدف المحوري:** استيعاب وتنفيذ المطلوب بأعلى كفاءة وسرعة.\n* **القرار الاستراتيجي:** المضي في الخطوة التنفيذية المباشرة مع الحفاظ على مرونة التعديل.\n* **خطوات العمل (Next Actions):**\n  1. مراجعة الأولويات وتحديد المخرجات الرئيسية.\n  2. توزيع المهام وربطها بمواعيد إنجاز فورية.\n  3. التحقق من اكتمال المعايير ونقل المخرجات لأدوات العمل.\n\n*تمت المعالجة الفورية عبر بروتوكول السرعة السيادي.*`;
-
-      case "deep-inquiry":
-        return `### التحقيق المقارن والتحليل المنهجي (Deep Inquiry Engine)\n\nأنا **سند الستري**، إليك الإطار المنهجي والتحليلي:\n\n#### 1. الإطار المنهجي والخلفية:\nفحص أبعاد الموضوع المطروح ودراسة العوامل المؤثرة على دقة النتائج وقابلية تطبيقها.\n\n#### 2. التحليل المنهجي والمقارنة:\n* **نقاط القوة:** الاستقلالية، سرعة المعالجة، وتوافر قنوات التصدير السلسة.\n* **الفرص:** التوظيف المتكامل للمحركات الخمسة المتخصصة وتوزيع الأعباء بمرونة.\n\n#### 3. التوصيات:\nالموازنة بين سرعة التنفيذ والعمق التحليلي لتحقيق أفضل عائد إنتاجي.\n\n*ملاحظة سيادية: تمت المعالجة عبر درع التحقيق الموحد لـ Sanad setri.*`;
-
-      case "omni-horizon":
-      default:
-        return `### إجابة المحرك المعرفي الشامل (Omni Horizon Engine)\n\nأهلاً بك، أنا **سند الستري** (Sanad setri). تم استيعاب موضوعك والتعامل معه وفق أعلى معايير الخصوصية والدقة:\n\n* **الخلاصة المعرفية:** يرتكز استفسارك على أهمية التنسيق المتقن بين سرعة الإنجاز وجودة التحليل.\n* **الخطوة التالية:** يمكنك التوسع في هذا المحور، تحويله إلى مهمة في قائمة المهام، أو نسخه ومشاركته عبر لوحة التكاملات اليومية.\n\n*نظام Sanad setri مستمر في خدمتك بكفاءة تامة مع الحفاظ على خصوصية بياناتك.*`;
-    }
-  } else {
-    return `### Sovereign Engine Response (Sanad setri)\n\nI am **Sanad setri**. Your request has been successfully analyzed through the sovereign resilience layer.\n\n* **Engine:** ${engineId}\n* **Privacy Shield:** Active & Encrypted.\n* **Execution:** Processed via multi-layer fallback architecture.\n\n*Sanad setri maintains zero-downtime productivity and sovereign data control.*`;
-  }
-}
 
 // Resilient model priority: gemini-3.1-flash-lite first for maximum availability and separate quota
 const RESILIENT_MODELS = ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.8-flash"];
@@ -256,7 +219,7 @@ app.post("/api/chat", async (req, res) => {
   } catch {
     const latencyMs = Date.now() - startTime;
     // Sovereign fallback response if cloud models are temporarily busy, rate-limited, or key is pending
-    const sovereignReply = getSovereignResponse(message, engineId);
+    const sovereignReply = getSovereignResponse(message, engineId as any, "ar");
     return res.status(200).json({
       content: sovereignReply,
       engineId,
@@ -339,7 +302,7 @@ app.post("/api/chat/stream", async (req, res) => {
     }
 
     if (!streamSuccess && !anyChunkSent) {
-      const fallbackText = getSovereignResponse(message, engineId);
+      const fallbackText = getSovereignResponse(message, engineId as any, "ar");
       const words = fallbackText.split(" ");
       for (let i = 0; i < words.length; i += 3) {
         const slice = words.slice(i, i + 3).join(" ") + (i + 3 < words.length ? " " : "");
@@ -350,7 +313,7 @@ app.post("/api/chat/stream", async (req, res) => {
     res.write("data: [DONE]\n\n");
     res.end();
   } catch {
-    const fallbackText = getSovereignResponse(message || "", engineId || "omni-horizon");
+    const fallbackText = getSovereignResponse(message || "", (engineId || "omni-horizon") as any, "ar");
     res.write(`data: ${JSON.stringify({ text: fallbackText, engineId, modelUsed: "sovereign-shield" })}\n\n`);
     res.write("data: [DONE]\n\n");
     res.end();

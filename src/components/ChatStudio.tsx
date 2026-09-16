@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Conversation, EngineId, ChatMessage, UserPreferences, ContentCategory } from '../types';
 import { UNIFIED_ENGINES, CATEGORY_LABELS } from '../lib/constants';
+import { getSovereignResponse } from '../lib/sovereignEngine';
 
 interface ChatStudioProps {
   conversation: Conversation;
@@ -87,10 +88,25 @@ export const ChatStudio: React.FC<ChatStudioProps> = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: query, engineId: secondaryEngineId }),
         });
-        const data = await res.json();
-        setComparativeResponse(data.content || 'تمت المعالجة.');
-      } catch (err) {
-        setComparativeResponse('فشل محرك المقارنة في الاستجابة.');
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data.content) {
+            setComparativeResponse(data.content);
+          } else {
+            throw new Error('No content in comparative response');
+          }
+        } else {
+          throw new Error('Comparative API call unavailable');
+        }
+      } catch {
+        const sovereignCompare = getSovereignResponse(
+          query,
+          secondaryEngineId,
+          isArabic ? 'ar' : 'en',
+          { isOfflineOrFallback: true }
+        );
+        setComparativeResponse(sovereignCompare);
       } finally {
         setIsComparing(false);
       }
