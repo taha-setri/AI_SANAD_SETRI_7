@@ -5,8 +5,28 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/chat/stream",
+      "destination": "/api/stream.ts"
+    },
+    {
+      "source": "/api/stream",
+      "destination": "/api/stream.ts"
+    },
+    {
+      "source": "/api/chat",
+      "destination": "/api/chat.ts"
+    },
+    {
+      "source": "/api/categorize",
+      "destination": "/api/categorize.ts"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/health.ts"
+    },
+    {
       "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "destination": "/api/$1.ts"
     },
     {
       "source": "/(.*)",

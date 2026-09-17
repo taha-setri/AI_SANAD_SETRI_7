@@ -139,3 +139,13 @@ export interface CookiePreferences {
   personalization: boolean;
   cloudSyncCache: boolean;
 }
+
+export interface LearnedMemoryItem {
+  id: string;
+  category: 'preference' | 'fact' | 'instruction' | 'concept';
+  content: string;
+  source?: string;
+  timestamp: string;
+  confidence: number;
+}
+

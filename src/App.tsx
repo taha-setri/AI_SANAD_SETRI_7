@@ -26,6 +26,7 @@ import {
 } from './lib/storage';
 import { UNIFIED_ENGINES, INITIAL_CONVERSATIONS, INITIAL_TASKS } from './lib/constants';
 import { getSovereignResponse } from './lib/sovereignEngine';
+import { extractLearningsFromMessage, getLearnedMemories } from './lib/learningMemory';
 import { NetworkBar } from './components/NetworkBar';
 import { Header } from './components/Header';
 import { CloudSyncModal } from './components/CloudSyncModal';
@@ -253,12 +254,20 @@ export default function App() {
     setIsLoading(true);
     const startTime = Date.now();
 
-    // 1. Try real-time streaming with strict 8-second safety timeout
+    // 0. Active continuous learning: extract and save any new facts or rules taught by the user
+    try {
+      extractLearningsFromMessage(text);
+    } catch {
+      // safe fallback
+    }
+    const learnedMemoriesList = getLearnedMemories().map((m) => m.content);
+
+    // 1. Try real-time streaming with 10-second safety timeout (optimized for Vercel & serverless)
     let streamSucceeded = false;
     let accumulatedText = '';
 
     const streamController = new AbortController();
-    const streamTimeout = setTimeout(() => streamController.abort(), 8000);
+    const streamTimeout = setTimeout(() => streamController.abort(), 10000);
 
     try {
       // Try /api/stream first (or fallback to /api/chat/stream)
@@ -273,6 +282,7 @@ export default function App() {
           conversationHistory: (existing?.messages || []).filter(
             (m) => m.content && m.content.trim() && m.id !== assistantMsgId
           ),
+          learnedMemories: learnedMemoriesList,
         }),
       });
 
@@ -291,7 +301,7 @@ export default function App() {
         // Read with safety promise race so reader never hangs indefinitely
         const readPromise = reader.read();
         const timeoutPromise = new Promise<{ done: true; value: undefined }>((resolve) =>
-          setTimeout(() => resolve({ done: true, value: undefined }), 6000)
+          setTimeout(() => resolve({ done: true, value: undefined }), 8000)
         );
 
         const { done, value } = await Promise.race([readPromise, timeoutPromise]);
@@ -366,10 +376,10 @@ export default function App() {
       return;
     }
 
-    // 2. Secondary failover: Standard JSON endpoint with 6s timeout
+    // 2. Secondary failover: Standard JSON endpoint with 8s timeout
     let jsonSucceeded = false;
     const jsonController = new AbortController();
-    const jsonTimeout = setTimeout(() => jsonController.abort(), 6000);
+    const jsonTimeout = setTimeout(() => jsonController.abort(), 8000);
 
     try {
       const fallbackRes = await fetch('/api/chat', {
@@ -382,6 +392,7 @@ export default function App() {
           conversationHistory: (existing?.messages || []).filter(
             (m) => m.content && m.content.trim() && m.id !== assistantMsgId
           ),
+          learnedMemories: learnedMemoriesList,
         }),
       });
 

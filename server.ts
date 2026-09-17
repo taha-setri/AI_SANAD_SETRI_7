@@ -110,7 +110,7 @@ app.get("/api/gateway/status", (_req, res) => {
 // API Route: Generate Chat Response
 app.post("/api/chat", async (req, res) => {
   const startTime = Date.now();
-  const { message = "", engineId = "omni-horizon", conversationHistory = [] } = req.body || {};
+  const { message = "", engineId = "omni-horizon", conversationHistory = [], learnedMemories = [] } = req.body || {};
 
   if (!message || typeof message !== "string") {
     return res.status(400).json({ error: "الرسالة مطلوبة (Message is required)" });
@@ -123,12 +123,17 @@ app.post("/api/chat", async (req, res) => {
     // Clean and sanitize chat history context
     const contents = buildGeminiContents(message, conversationHistory);
 
+    let systemInstruction = engineConfig.systemPrompt;
+    if (Array.isArray(learnedMemories) && learnedMemories.length > 0) {
+      systemInstruction += `\n\n[بنك المعرفة والذاكرة التراكمية المستمرة المستفادة من المستخدم]:\n` + learnedMemories.map((m: any) => `- ${typeof m === 'string' ? m : m.content}`).join('\n');
+    }
+
     const isPulse = engineId === "pulse-velocity";
     const thinkingLevel = isPulse ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW;
 
     const { response, modelUsed } = await generateWithFallback(genAI, {
       contents,
-      systemInstruction: engineConfig.systemPrompt,
+      systemInstruction,
       temperature: engineConfig.temperature,
       thinkingLevel,
     });
@@ -165,7 +170,7 @@ app.post("/api/chat", async (req, res) => {
 
 // API Route: Real-time Streaming Chat Response (Server-Sent Events)
 app.post(["/api/chat/stream", "/api/stream"], async (req, res) => {
-  const { message, engineId = "omni-horizon", conversationHistory = [] } = req.body;
+  const { message, engineId = "omni-horizon", conversationHistory = [], learnedMemories = [] } = req.body || {};
 
   if (!message || typeof message !== "string") {
     return res.status(400).json({ error: "الرسالة مطلوبة (Message is required)" });
@@ -182,6 +187,11 @@ app.post(["/api/chat/stream", "/api/stream"], async (req, res) => {
     // Clean and sanitize chat history context
     const contents = buildGeminiContents(message, conversationHistory);
 
+    let systemInstruction = engineConfig.systemPrompt;
+    if (Array.isArray(learnedMemories) && learnedMemories.length > 0) {
+      systemInstruction += `\n\n[بنك المعرفة والذاكرة التراكمية المستمرة المستفادة من المستخدم]:\n` + learnedMemories.map((m: any) => `- ${typeof m === 'string' ? m : m.content}`).join('\n');
+    }
+
     const isPulse = engineId === "pulse-velocity";
     const thinkingLevel = isPulse ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW;
     let streamSuccess = false;
@@ -192,7 +202,7 @@ app.post(["/api/chat/stream", "/api/stream"], async (req, res) => {
       try {
         const isGemini3 = model.startsWith("gemini-3");
         const config: any = {
-          systemInstruction: engineConfig.systemPrompt,
+          systemInstruction,
           temperature: engineConfig.temperature,
         };
         if (isGemini3) {

@@ -35,7 +35,8 @@ import {
   Fish,
   Flower2,
   Waves,
-  Compass
+  Compass,
+  Brain
 } from 'lucide-react';
 import { 
   Conversation, 
@@ -48,11 +49,18 @@ import {
   VisionDisplayConfig,
   BiomeCreatureMode,
   BiomePace,
-  PlatformLogoStyle
+  PlatformLogoStyle,
+  LearnedMemoryItem
 } from '../types';
 import { UNIFIED_ENGINES, CATEGORY_LABELS } from '../lib/constants';
 import { encryptData } from '../lib/crypto';
 import { DEFAULT_VISION_CONFIG } from '../lib/storage';
+import { 
+  getLearnedMemories, 
+  saveLearnedMemory, 
+  deleteLearnedMemory, 
+  clearAllLearnedMemories 
+} from '../lib/learningMemory';
 import { DashboardView } from './DashboardView';
 import { ChatStudio } from './ChatStudio';
 import { AnalyticsView } from './AnalyticsView';
@@ -143,6 +151,33 @@ export const FounderCockpit: React.FC<FounderCockpitProps> = ({
   });
   const [newKeyInput, setNewKeyInput] = useState('');
   const [keyChangeSuccess, setKeyChangeSuccess] = useState(false);
+
+  // Continuous Learning Memory State
+  const [learnedList, setLearnedList] = useState<LearnedMemoryItem[]>(() => getLearnedMemories());
+  const [newMemoryText, setNewMemoryText] = useState('');
+  const [newMemoryCategory, setNewMemoryCategory] = useState<'fact' | 'instruction' | 'preference'>('instruction');
+  const [memoryActionFeedback, setMemoryActionFeedback] = useState<string | null>(null);
+
+  const handleAddMemory = () => {
+    if (!newMemoryText.trim()) return;
+    saveLearnedMemory(newMemoryText.trim(), newMemoryCategory, 'founder_manual');
+    setLearnedList(getLearnedMemories());
+    setNewMemoryText('');
+    setMemoryActionFeedback(isArabic ? 'تم حفظ المعلومة في الذاكرة التراكمية بنجاح!' : 'Memory saved successfully!');
+    setTimeout(() => setMemoryActionFeedback(null), 3000);
+  };
+
+  const handleDeleteMemory = (id: string) => {
+    deleteLearnedMemory(id);
+    setLearnedList(getLearnedMemories());
+  };
+
+  const handleClearMemories = () => {
+    if (confirm(isArabic ? 'هل تريد مسح بنك الذاكرة التراكمية بالكامل؟' : 'Clear all learned memories?')) {
+      clearAllLearnedMemories();
+      setLearnedList([]);
+    }
+  };
 
   // Chat search inside cockpit
   const [chatSearchQuery, setChatSearchQuery] = useState('');
@@ -820,6 +855,138 @@ export const FounderCockpit: React.FC<FounderCockpitProps> = ({
                   <span>{isArabic ? 'تم تحديث كود المرور المشفر الخاص بالمؤسس بنجاح!' : 'Founder passkey updated successfully!'}</span>
                 </div>
               )}
+            </div>
+
+            {/* Continuous Learning Bank (بنك الذاكرة والمعرفة التراكمية) */}
+            <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950/20 to-slate-900 border-2 border-indigo-500/40 shadow-xl space-y-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+                      <Brain className="w-5 h-5" />
+                    </span>
+                    <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                      <span>{isArabic ? 'بنك الذاكرة والمعرفة التراكمية (الذكاء المتعلم)' : 'Sovereign Continuous Learning Bank'}</span>
+                      <span className="px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-700/60 text-[10px] font-mono">
+                        {learnedList.length} {isArabic ? 'معلومة محفوظة' : 'learned'}
+                      </span>
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-300">
+                    {isArabic 
+                      ? 'يتعلم "سند الستري" تلقائياً من المحادثات (عند قولك "تذكر أن..." أو "احفظ أن...")، كما يمكنك تلقينه قواعد وتفضيلات مباشرة هنا تُحقن في كافة إجاباته.'
+                      : 'Sanad Setri permanently learns facts and instructions from chats, retaining context across all conversations.'}
+                  </p>
+                </div>
+
+                {learnedList.length > 0 && (
+                  <button
+                    onClick={handleClearMemories}
+                    className="px-3 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                    title={isArabic ? 'مسح بنك الذاكرة بالكامل' : 'Clear all learned items'}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{isArabic ? 'تفريغ الذاكرة' : 'Clear Memory'}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Add New Memory Form */}
+              <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
+                <div className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <Plus className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>{isArabic ? 'تلقين وإضافة معلومة أو قاعدة جديدة للذكاء:' : 'Teach a new fact or permanent instruction:'}</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                  <select
+                    value={newMemoryCategory}
+                    onChange={(e) => setNewMemoryCategory(e.target.value as any)}
+                    className="w-full sm:w-36 bg-slate-900 border border-slate-750 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="instruction">{isArabic ? 'توجيه / قاعدة' : 'Instruction'}</option>
+                    <option value="fact">{isArabic ? 'حقيقة / معلومة' : 'Fact'}</option>
+                    <option value="preference">{isArabic ? 'تفضيل شخصي' : 'Preference'}</option>
+                  </select>
+
+                  <input
+                    type="text"
+                    value={newMemoryText}
+                    onChange={(e) => setNewMemoryText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleAddMemory();
+                    }}
+                    placeholder={isArabic ? 'مثال: أجِب دائماً بلغة مباشرة بدون اعتذار، أو مشروعي القادم هو منصة تجارة...' : 'e.g., Always prioritize clean TypeScript code...'}
+                    className="flex-1 w-full bg-slate-900 border border-slate-750 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500"
+                  />
+
+                  <button
+                    onClick={handleAddMemory}
+                    disabled={!newMemoryText.trim()}
+                    className="w-full sm:w-auto px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{isArabic ? 'حفظ وتعليم' : 'Save & Learn'}</span>
+                  </button>
+                </div>
+
+                {memoryActionFeedback && (
+                  <p className="text-[11px] text-emerald-400 flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{memoryActionFeedback}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* List of Current Memories */}
+              <div className="space-y-2">
+                <div className="text-xs font-semibold text-slate-400">
+                  {isArabic ? 'قائمة المعلومات والقواعد النشطة في عقل الذكاء الاصطناعي:' : 'Active Learned Items:'}
+                </div>
+
+                {learnedList.length === 0 ? (
+                  <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800/80 text-center text-xs text-slate-500">
+                    {isArabic ? 'لا توجد معلومات مخصصة بعد. قل للذكاء "تذكر أن..." في المحادثة أو أضف معلومة أعلاه!' : 'No custom memories yet. Say "remember that..." in chat or add above!'}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
+                    {learnedList.map((m) => (
+                      <div
+                        key={m.id}
+                        className="p-3 rounded-2xl bg-slate-950 border border-slate-800/90 hover:border-indigo-500/50 flex items-start justify-between gap-2.5 transition-all group"
+                      >
+                        <div className="space-y-1 overflow-hidden">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[9px] px-2 py-0.5 rounded-full font-mono uppercase ${
+                              m.category === 'instruction' 
+                                ? 'bg-amber-950/80 text-amber-300 border border-amber-800/60'
+                                : m.category === 'fact'
+                                ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-800/60'
+                                : 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60'
+                            }`}>
+                              {m.category}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-mono">
+                              {new Date(m.timestamp).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-200 leading-relaxed font-sans break-words">
+                            {m.content}
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => handleDeleteMemory(m.id)}
+                          className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 transition-colors opacity-70 group-hover:opacity-100 cursor-pointer shrink-0"
+                          title={isArabic ? 'حذف هذه المعلومة' : 'Delete memory'}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

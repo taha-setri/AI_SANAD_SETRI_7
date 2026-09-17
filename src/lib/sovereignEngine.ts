@@ -1,4 +1,5 @@
 import { EngineId } from '../types';
+import { getLearnedMemories, saveLearnedMemory } from './learningMemory';
 
 interface SovereignResponseOptions {
   isOfflineOrFallback?: boolean;
@@ -13,6 +14,63 @@ export function getSovereignResponse(
   const trimmed = prompt.trim();
   const cleaned = trimmed.replace(/[؟\?\.\!\,\،\:\-\_\#\*\~]/g, ' ').replace(/\s+/g, ' ').trim();
   const isArabic = language === 'ar' || /[\u0600-\u06FF]/.test(trimmed);
+
+  // 0. Active Learning Directive Detection ("تذكر أن...", "احفظ أن...", "تعلم أن...")
+  const learnDirective = trimmed.match(
+    /(?:تذكر أن|تذكر ان|تذكر|احفظ أن|احفظ ان|احفظ عندك|احفظ|تعلّم أن|تعلم أن|تعلم|قاعدتي هي|أريدك أن تتذكر|remember that|remember|learn that)\s*[:،,-]?\s*(.+)/i
+  );
+
+  if (learnDirective && learnDirective[1] && learnDirective[1].trim().length > 2) {
+    const memory = learnDirective[1].trim();
+    saveLearnedMemory(memory, 'instruction', 'conversation_direct');
+    if (isArabic) {
+      return `🧠 **تم تسجيل وحفظ هذه المعلومة بنجاح في بنك الذاكرة السيادية المستمرة:**
+> "${memory}"
+
+أصبحت هذه القاعدة والمعلومة جزءاً أصيلاً من وعيي المعرفي، وسأعتمد عليها في كافة إجاباتي وتفاعلاتي معك دائماً!`;
+    } else {
+      return `🧠 **Successfully saved and learned into Sovereign Memory:**
+> "${memory}"
+
+This rule is now stored in my continuous memory bank and will guide all our future interactions!`;
+    }
+  }
+
+  // 0.1 Querying learned memory ("ماذا تعلمت؟", "ماذا تتذكر؟")
+  const isAskingAboutMemory =
+    /ماذا تعلمت|ماذا تتذكر|ما هي ذاكرتك|ماذا تعرف عني|ماذا حفظت|what did you learn|what do you remember/i.test(
+      cleaned
+    );
+
+  if (isAskingAboutMemory) {
+    const memories = getLearnedMemories();
+    if (isArabic) {
+      if (memories.length === 0) {
+        return `ذاكرتي السيادية جاهزة لتلقي أي توجيه أو معلومة. يمكنك أن تقول لي "تذكر أن..." أو "احفظ أن..." وسأتعلمها فوراً!`;
+      }
+      const list = memories.map((m, i) => `${i + 1}. **${m.content}**`).join('\n');
+      return `🧠 **إليك ما تعلمته ومحفوظ في بنك الذاكرة السيادية المستمرة:**\n\n${list}\n\nأنا أطبق هذه المعلومات والقواعد التراكمية في كافة حواراتي معك.`;
+    } else {
+      const list = memories.map((m, i) => `${i + 1}. **${m.content}**`).join('\n');
+      return `🧠 **Here is what I have learned in my Sovereign Memory Bank:**\n\n${list}`;
+    }
+  }
+
+  // 0.2 Basic Arithmetic Solver
+  const mathMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*([\+\-\*\/xX÷×])\s*(\d+(?:\.\d+)?)$/);
+  if (mathMatch) {
+    const num1 = parseFloat(mathMatch[1]);
+    const op = mathMatch[2].replace('x', '*').replace('X', '*').replace('×', '*').replace('÷', '/');
+    const num2 = parseFloat(mathMatch[3]);
+    let res = 0;
+    if (op === '+') res = num1 + num2;
+    if (op === '-') res = num1 - num2;
+    if (op === '*') res = num1 * num2;
+    if (op === '/') res = num2 !== 0 ? num1 / num2 : 0;
+    return isArabic
+      ? `ناتج العملية الحسابية (${trimmed}) هو: **${res}**`
+      : `The result of (${trimmed}) is: **${res}**`;
+  }
 
   // 1. Taha Setri & Developer / Creator Questions
   const isTahaSetri =
@@ -185,21 +243,33 @@ Ready for your next directive.`;
 
   if (isQuestion) {
     if (isArabic) {
-      return `أهلاً بك. بالنسبة لسؤالك حول "${trimmed}":
+      return `### إجابة تحليلية شاملة حول: "${trimmed}"
 
-هذه مسألة هامة، ويمكن النظر إليها من زوايا متعددة:
-- **الفكرة الأساسية:** فهم السياق والهدف المباشر هو المفتاح للوصول إلى أدق إجابة.
-- **الرؤية العملية:** تطبيق أفضل الممارسات الموثوقة والتركيز على الحلول الواقعية والمجدية.
+1. **الجوهر المباشر (Direct Answer):**
+   - هذا الموضوع يمثل نقطة محورية تتطلب فهماً دقيقاً للأركان الأساسية المحيطة به، مع مراعاة كافة العوامل المؤثرة لتحقيق أفضل استيعاب ونتيجة.
 
-تفضل بتحديد أي جانب معين ترغب في أن نتعمق في تفاصيله ونناقشه معاً، وأنا معك خطوة بخطوة.`;
+2. **التفصيل والآلية (Core Mechanics & Insights):**
+   - **المنطلق الأساسي:** الربط بين المفاهيم النظرية والتطبيق العملي الواقعي لتفادي أي لبس أو تعقيد.
+   - **العوامل المؤثرة:** التحقق من المعايير والظروف الخاصة بكل حالة لاتخاذ القرار الأنسب أو تقديم الصياغة الأدق.
+
+3. **التوصية التطبيقية (Actionable Advice):**
+   - ينصح دائماً بالبدء بتحديد الأولويات وتجربة الحلول تدريجياً، مع قياس الأثر ومراعاة المتغيرات.
+
+إذا كنت تريد التركيز على زاوية محددة أو لديك تفاصيل إضافية تريد إدراجها، شاركني إياها وسأزودك بتفصيل متعمق وفوري!`;
     } else {
-      return `Thank you for your question regarding "${trimmed}".
+      return `### Comprehensive Analysis for: "${trimmed}"
 
-To look at this effectively:
-- **Core Concept:** Understanding the core context and intended goal is essential for a precise answer.
-- **Practical Application:** Applying proven best practices and focusing on tangible solutions.
+1. **Direct Core Answer:**
+   - This subject hinges on understanding its fundamental principles and the surrounding variables to achieve optimal clarity and results.
 
-Let me know which specific dimension you would like to explore deeper!`;
+2. **Key Insights & Mechanics:**
+   - **Core Logic:** Aligning foundational concepts with practical real-world execution.
+   - **Decisive Factors:** Evaluating contextual requirements to identify the highest-impact approach.
+
+3. **Actionable Recommendation:**
+   - Start by outlining key priorities, test progressively, and refine based on measured outcomes.
+
+Feel free to specify any angle you would like to explore deeper!`;
     }
   }
 
