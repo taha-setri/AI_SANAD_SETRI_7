@@ -198,48 +198,12 @@ export default function App() {
   const handleSendMessage = async (text: string, engineId: EngineId) => {
     if (!text.trim()) return;
 
-    let targetConvId = activeConversationId;
-    let targetConv = conversations.find((c) => c.id === targetConvId);
-
-    // If current is empty or doesn't exist, create it
-    if (!targetConv || targetConv.id === 'empty-temp') {
-      const newConv: Conversation = {
-        id: `conv-${Date.now()}`,
-        title: text.slice(0, 36) + (text.length > 36 ? '...' : ''),
-        engineId,
-        messages: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        category: 'general',
-        isEncrypted: true,
-        tags: ['Sanad_setri'],
-      };
-      targetConvId = newConv.id;
-      targetConv = newConv;
-      setConversations((prev) => [newConv, ...prev]);
-      setActiveConversationId(newConv.id);
-    }
-
     const userMessage: ChatMessage = {
       id: `msg-${Date.now()}-u`,
       role: 'user',
       content: text,
       timestamp: new Date().toISOString(),
     };
-
-    // Update state immediately with user message
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === targetConvId
-          ? {
-              ...c,
-              messages: [...c.messages, userMessage],
-              updatedAt: new Date().toISOString(),
-              title: c.messages.length === 0 ? text.slice(0, 36) + (text.length > 36 ? '...' : '') : c.title,
-            }
-          : c
-      )
-    );
 
     const assistantMsgId = `msg-${Date.now()}-a`;
     const assistantPlaceholder: ChatMessage = {
@@ -248,50 +212,89 @@ export default function App() {
       content: '',
       engineId,
       timestamp: new Date().toISOString(),
-      category: targetConv?.category || 'general',
+      category: 'general',
     };
 
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === targetConvId
-          ? {
-              ...c,
-              engineId,
-              messages: [...c.messages, assistantPlaceholder],
-              updatedAt: new Date().toISOString(),
-            }
-          : c
-      )
-    );
+    let targetConvId = activeConversationId;
+    const existing = conversations.find((c) => c.id === targetConvId);
+
+    if (!targetConvId || !existing || existing.id === 'empty-temp' || existing.id === 'clean-instant-session') {
+      const newId = `conv-${Date.now()}`;
+      targetConvId = newId;
+      const newConv: Conversation = {
+        id: newId,
+        title: text.slice(0, 36) + (text.length > 36 ? '...' : ''),
+        engineId,
+        messages: [userMessage, assistantPlaceholder],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        category: 'general',
+        isEncrypted: true,
+        tags: ['Sanad_setri'],
+      };
+      setConversations((prev) => [newConv, ...prev.filter((c) => c.id !== 'empty-temp' && c.id !== 'clean-instant-session')]);
+      setActiveConversationId(newId);
+    } else {
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === targetConvId
+            ? {
+                ...c,
+                engineId,
+                messages: [...c.messages, userMessage, assistantPlaceholder],
+                updatedAt: new Date().toISOString(),
+                title: c.messages.length === 0 ? text.slice(0, 36) + (text.length > 36 ? '...' : '') : c.title,
+              }
+            : c
+        )
+      );
+    }
 
     setIsLoading(true);
     const startTime = Date.now();
 
+    // 1. Try real-time streaming with strict 8-second safety timeout
+    let streamSucceeded = false;
+    let accumulatedText = '';
+
+    const streamController = new AbortController();
+    const streamTimeout = setTimeout(() => streamController.abort(), 8000);
+
     try {
-      const response = await fetch('/api/chat/stream', {
+      // Try /api/stream first (or fallback to /api/chat/stream)
+      const streamUrl = '/api/stream';
+      const response = await fetch(streamUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: streamController.signal,
         body: JSON.stringify({
           message: text,
           engineId,
-          conversationHistory: (targetConv?.messages || []).filter(
+          conversationHistory: (existing?.messages || []).filter(
             (m) => m.content && m.content.trim() && m.id !== assistantMsgId
           ),
         }),
       });
 
+      clearTimeout(streamTimeout);
+
       const contentType = response.headers.get('content-type') || '';
       if (!response.ok || !response.body || !contentType.includes('text/event-stream')) {
-        throw new Error('Streaming endpoint unavailable or not SSE');
+        throw new Error('Streaming endpoint not available or returned non-SSE');
       }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let accumulatedText = '';
       let buffer = '';
 
       while (true) {
-        const { done, value } = await reader.read();
+        // Read with safety promise race so reader never hangs indefinitely
+        const readPromise = reader.read();
+        const timeoutPromise = new Promise<{ done: true; value: undefined }>((resolve) =>
+          setTimeout(() => resolve({ done: true, value: undefined }), 6000)
+        );
+
+        const { done, value } = await Promise.race([readPromise, timeoutPromise]);
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
@@ -322,19 +325,112 @@ export default function App() {
                 );
               }
             } catch {
-              // Ignore non-json SSE lines
+              // Ignore non-json lines
             }
           }
         }
       }
 
-      if (!accumulatedText.trim()) {
-        throw new Error('Empty stream response');
+      if (accumulatedText.trim()) {
+        streamSucceeded = true;
+        const latencyMs = Date.now() - startTime;
+        const estimatedTokens = Math.round((text.length + accumulatedText.length) / 3.8);
+
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === targetConvId
+              ? {
+                  ...c,
+                  messages: c.messages.map((m) =>
+                    m.id === assistantMsgId
+                      ? {
+                          ...m,
+                          content: accumulatedText,
+                          latencyMs,
+                          estimatedTokens,
+                        }
+                      : m
+                  ),
+                }
+              : c
+          )
+        );
       }
+    } catch {
+      clearTimeout(streamTimeout);
+      // Stream failed or timed out, continue to fallback below
+    }
 
+    if (streamSucceeded) {
+      setIsLoading(false);
+      return;
+    }
+
+    // 2. Secondary failover: Standard JSON endpoint with 6s timeout
+    let jsonSucceeded = false;
+    const jsonController = new AbortController();
+    const jsonTimeout = setTimeout(() => jsonController.abort(), 6000);
+
+    try {
+      const fallbackRes = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: jsonController.signal,
+        body: JSON.stringify({
+          message: text,
+          engineId,
+          conversationHistory: (existing?.messages || []).filter(
+            (m) => m.content && m.content.trim() && m.id !== assistantMsgId
+          ),
+        }),
+      });
+
+      clearTimeout(jsonTimeout);
+
+      const fbContentType = fallbackRes.headers.get('content-type') || '';
+      if (fallbackRes.ok && fbContentType.includes('application/json')) {
+        const fallbackData = await fallbackRes.json();
+        if (fallbackData.content) {
+          jsonSucceeded = true;
+          setConversations((prev) =>
+            prev.map((c) =>
+              c.id === targetConvId
+                ? {
+                    ...c,
+                    messages: c.messages.map((m) =>
+                      m.id === assistantMsgId
+                        ? {
+                            ...m,
+                            content: fallbackData.content,
+                            latencyMs: fallbackData.latencyMs || (Date.now() - startTime),
+                            estimatedTokens: fallbackData.estimatedTokens || Math.round(fallbackData.content.length / 3.8),
+                          }
+                        : m
+                    ),
+                  }
+                : c
+            )
+          );
+        }
+      }
+    } catch {
+      clearTimeout(jsonTimeout);
+    }
+
+    if (jsonSucceeded) {
+      setIsLoading(false);
+      return;
+    }
+
+    // 3. Guaranteed High-Intelligence Client-Side Sovereign Response (Never fails, zero latency)
+    try {
+      const sovereignReply = getSovereignResponse(
+        text,
+        engineId,
+        userPreferences.language,
+        { isOfflineOrFallback: true }
+      );
       const latencyMs = Date.now() - startTime;
-      const estimatedTokens = Math.round((text.length + accumulatedText.length) / 3.8);
-
       setConversations((prev) =>
         prev.map((c) =>
           c.id === targetConvId
@@ -344,9 +440,9 @@ export default function App() {
                   m.id === assistantMsgId
                     ? {
                         ...m,
-                        content: accumulatedText,
+                        content: sovereignReply,
                         latencyMs,
-                        estimatedTokens,
+                        estimatedTokens: Math.round(sovereignReply.length / 3.8),
                       }
                     : m
                 ),
@@ -354,110 +450,6 @@ export default function App() {
             : c
         )
       );
-
-      // Auto-categorize if the session is new and autoCategorize is enabled
-      if (userPreferences.autoCategorize && (targetConv?.messages.length || 0) <= 2) {
-        fetch('/api/categorize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text }),
-        })
-          .then((res) => (res.ok && res.headers.get('content-type')?.includes('application/json') ? res.json() : null))
-          .then((catData) => {
-            if (catData?.category) {
-              const catMap: Record<string, ContentCategory> = {
-                'برمجة وحلول تقنية': 'code',
-                'صياغة ومحتوى إبداعي': 'creative',
-                'تحليل استراتيجي': 'analysis',
-                'تلخيص ومهام تنفيذية': 'summary',
-                'أبحاث ودراسات': 'research',
-              };
-              const mappedCategory = catMap[catData.category] || 'general';
-
-              setConversations((prev) =>
-                prev.map((c) =>
-                  c.id === targetConvId
-                    ? {
-                        ...c,
-                        category: mappedCategory,
-                        title: catData.suggestedTitle || c.title,
-                        tags: Array.from(new Set([...c.tags, ...(catData.tags || [])])),
-                      }
-                    : c
-                )
-              );
-            }
-          })
-          .catch(() => {});
-      }
-    } catch (error) {
-      console.warn('Chat stream not available, engaging sovereign fallback engine:', error);
-      try {
-        const fallbackRes = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: text,
-            engineId,
-            conversationHistory: targetConv?.messages || [],
-          }),
-        });
-        const fbContentType = fallbackRes.headers.get('content-type') || '';
-        if (!fallbackRes.ok || !fbContentType.includes('application/json')) {
-          throw new Error('Standard API route unavailable or returned non-JSON');
-        }
-        const fallbackData = await fallbackRes.json();
-        if (!fallbackData.content) {
-          throw new Error('No content returned from API');
-        }
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.id === targetConvId
-              ? {
-                  ...c,
-                  messages: c.messages.map((m) =>
-                    m.id === assistantMsgId
-                      ? {
-                          ...m,
-                          content: fallbackData.content,
-                          latencyMs: fallbackData.latencyMs,
-                          estimatedTokens: fallbackData.estimatedTokens,
-                        }
-                      : m
-                  ),
-                }
-              : c
-          )
-        );
-      } catch (fallbackErr) {
-        // High-Intelligence Client-Side Sovereign Response
-        const sovereignReply = getSovereignResponse(
-          text,
-          engineId,
-          userPreferences.language,
-          { isOfflineOrFallback: true }
-        );
-        const latencyMs = Date.now() - startTime;
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.id === targetConvId
-              ? {
-                  ...c,
-                  messages: c.messages.map((m) =>
-                    m.id === assistantMsgId
-                      ? {
-                          ...m,
-                          content: sovereignReply,
-                          latencyMs,
-                          estimatedTokens: Math.round(sovereignReply.length / 3.8),
-                        }
-                      : m
-                  ),
-                }
-              : c
-          )
-        );
-      }
     } finally {
       setIsLoading(false);
     }
@@ -596,9 +588,7 @@ export default function App() {
                 setActiveView('chat');
               }}
               onNewConversationWithMessage={(msg, eng) => {
-                handleNewConversation(eng);
-                handleSendMessage(msg, eng);
-                setActiveView('chat');
+                handleNewChatWithPrompt(msg, eng);
               }}
               onNavigateView={handleNavigateView}
               isArabic={userPreferences.language === 'ar'}

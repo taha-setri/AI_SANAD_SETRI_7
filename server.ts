@@ -164,7 +164,7 @@ app.post("/api/chat", async (req, res) => {
 });
 
 // API Route: Real-time Streaming Chat Response (Server-Sent Events)
-app.post("/api/chat/stream", async (req, res) => {
+app.post(["/api/chat/stream", "/api/stream"], async (req, res) => {
   const { message, engineId = "omni-horizon", conversationHistory = [] } = req.body;
 
   if (!message || typeof message !== "string") {

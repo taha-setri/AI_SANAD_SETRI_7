@@ -1,6 +1,6 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
-import { getSovereignResponse } from "../../src/lib/sovereignEngine";
-import { ENGINE_SYSTEM_PROMPTS, buildGeminiContents } from "../../src/lib/geminiHistory";
+import { getSovereignResponse } from "../src/lib/sovereignEngine";
+import { ENGINE_SYSTEM_PROMPTS, buildGeminiContents } from "../src/lib/geminiHistory";
 
 const RESILIENT_MODELS = ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.8-flash"];
 const ENGINE_PROMPTS = ENGINE_SYSTEM_PROMPTS;
@@ -86,11 +86,10 @@ export default async function handler(req: any, res: any) {
         return res.end();
       }
     } catch {
-      // Fall through
+      // Fall through to fallback
     }
   }
 
-  // Fallback if cloud API is unconfigured or failed
   const fallbackText = getSovereignResponse(message, engineId as any, "ar");
   const words = fallbackText.split(" ");
   for (let i = 0; i < words.length; i += 3) {

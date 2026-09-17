@@ -27,6 +27,7 @@ import {
   VisionDisplayConfig
 } from '../types';
 import { UNIFIED_ENGINES } from '../lib/constants';
+import { getSovereignResponse } from '../lib/sovereignEngine';
 import { VisionAmbientBiome } from './VisionAmbientBiome';
 import { SanadSetriLogo, SanadSetriBrand } from './SanadSetriLogo';
 
@@ -85,16 +86,22 @@ export const VisionSearchPortal: React.FC<VisionSearchPortalProps> = ({
     setAiAnswer('');
     setAiEngineUsed(activeEngineId);
 
+    const streamController = new AbortController();
+    const streamTimeout = setTimeout(() => streamController.abort(), 7000);
+
     try {
-      const response = await fetch('/api/chat/stream', {
+      const response = await fetch('/api/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: streamController.signal,
         body: JSON.stringify({
           message: query.trim(),
           engineId: activeEngineId,
           conversationHistory: [],
         }),
       });
+
+      clearTimeout(streamTimeout);
 
       if (!response.ok || !response.body) {
         throw new Error('Stream failed');
@@ -106,7 +113,12 @@ export const VisionSearchPortal: React.FC<VisionSearchPortalProps> = ({
       let buffer = '';
 
       while (true) {
-        const { done, value } = await reader.read();
+        const readPromise = reader.read();
+        const timeoutPromise = new Promise<{ done: true; value: undefined }>((resolve) =>
+          setTimeout(() => resolve({ done: true, value: undefined }), 5000)
+        );
+
+        const { done, value } = await Promise.race([readPromise, timeoutPromise]);
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
@@ -131,24 +143,34 @@ export const VisionSearchPortal: React.FC<VisionSearchPortalProps> = ({
         }
       }
 
-      if (!accumulated) {
-        setAiAnswer(isArabic ? 'تمت معالجة البحث بنجاح.' : 'Search processed.');
+      if (!accumulated.trim()) {
+        throw new Error('Empty stream');
       }
-    } catch (err: any) {
-      console.error('Vision search AI error:', err);
+    } catch {
+      clearTimeout(streamTimeout);
       try {
+        const jsonController = new AbortController();
+        const jsonTimeout = setTimeout(() => jsonController.abort(), 5000);
+
         const fallbackRes = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: jsonController.signal,
           body: JSON.stringify({
             message: query.trim(),
             engineId: activeEngineId,
           }),
         });
+        clearTimeout(jsonTimeout);
         const fallbackData = await fallbackRes.json();
-        setAiAnswer(fallbackData.content || (isArabic ? 'تم استلام الاستعلام بنجاح.' : 'Query received.'));
+        if (fallbackData.content) {
+          setAiAnswer(fallbackData.content);
+        } else {
+          throw new Error('No content in fallback');
+        }
       } catch {
-        setAiAnswer(isArabic ? 'عذراً، تعذر إتمام البحث اللحظي. يرجى إعادة المحاولة.' : 'Search could not complete. Please retry.');
+        const directReply = getSovereignResponse(query.trim(), activeEngineId, isArabic ? 'ar' : 'en');
+        setAiAnswer(directReply);
       }
     } finally {
       setIsSearchingAI(false);

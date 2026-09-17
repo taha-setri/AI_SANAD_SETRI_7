@@ -289,12 +289,21 @@ export const ChatStudio: React.FC<ChatStudioProps> = ({
                       ? 'bg-cyan-600/20 border border-cyan-500/30 text-white'
                       : 'bg-slate-900/90 border border-slate-800 text-slate-200 shadow-md'
                   }`}>
-                    <div className="whitespace-pre-wrap font-sans break-words selection:bg-cyan-500/30">
-                      {msg.content}
-                    </div>
+                    {!msg.content.trim() ? (
+                      <div className="flex items-center gap-2.5 py-1 text-slate-400">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <span className="text-xs font-medium">
+                          {isArabic ? `يقوم ${msgEngine.nameAr} بصياغة الرد والتحليل...` : `${msgEngine.nameEn} is generating response...`}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="whitespace-pre-wrap font-sans break-words selection:bg-cyan-500/30">
+                        {msg.content}
+                      </div>
+                    )}
 
                     {/* Bottom message toolbar for assistant */}
-                    {!isUser && (
+                    {!isUser && msg.content.trim().length > 0 && (
                       <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
                         <div className="flex items-center gap-2">
                           <button
@@ -339,19 +348,6 @@ export const ChatStudio: React.FC<ChatStudioProps> = ({
               </div>
             );
           })
-        )}
-
-        {/* Loading Spinner */}
-        {isLoading && (
-          <div className="flex gap-3 max-w-3xl ml-auto animate-pulse">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-indigo-600 text-white flex items-center justify-center">
-              <Bot className="w-4 h-4" />
-            </div>
-            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-400 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce"></span>
-              <span>{isArabic ? `يقوم ${primaryEngine.nameAr} بالتوليد والتحليل...` : `${primaryEngine.nameEn} processing...`}</span>
-            </div>
-          </div>
         )}
 
         {/* Comparative Dual Response Display if available */}
