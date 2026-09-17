@@ -171,9 +171,6 @@ export const FounderEncryptedGateModal: React.FC<FounderEncryptedGateModalProps>
                 {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            <p className="text-[11px] text-amber-500/70 font-mono text-center pt-1">
-              {isArabic ? 'رمز الوصول السريع للمؤسس: 2026 أو TAHA2026' : 'Founder Passkey: 2026 or TAHA2026'}
-            </p>
           </div>
 
           {/* Error Message */}
