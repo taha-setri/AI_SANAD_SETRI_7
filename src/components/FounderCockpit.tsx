@@ -139,7 +139,7 @@ export const FounderCockpit: React.FC<FounderCockpitProps> = ({
   const [passcodeError, setPasscodeError] = useState(false);
   const [showPasscode, setShowPasscode] = useState(false);
   const [masterPasskey, setMasterPasskey] = useState(() => {
-    return localStorage.getItem('sanad_founder_passkey') || 'SETRI-VISION-2026';
+    return localStorage.getItem('sanad_founder_passkey') || 'Tahasetri1998@';
   });
   const [newKeyInput, setNewKeyInput] = useState('');
   const [keyChangeSuccess, setKeyChangeSuccess] = useState(false);
@@ -176,11 +176,12 @@ export const FounderCockpit: React.FC<FounderCockpitProps> = ({
       const inputHash = await hashPasskey(clean);
       const storedHash = localStorage.getItem('sanad_founder_passkey_hash');
 
+      // STRICT 100% SOVEREIGN LOCK: Only the exclusive passkey Tahasetri1998@ or founder-updated hash
       const isMatch =
+        clean === 'Tahasetri1998@' ||
+        clean.toUpperCase() === 'TAHASETRI1998@' ||
         (storedHash && inputHash === storedHash) ||
-        clean.toUpperCase() === 'SETRI-VISION-2026' ||
-        clean.toUpperCase() === 'TAHA2026' ||
-        clean.toUpperCase() === masterPasskey.toUpperCase();
+        clean === masterPasskey;
 
       if (isMatch) {
         localStorage.setItem('sanad_founder_passkey_hash', inputHash);
@@ -195,9 +196,9 @@ export const FounderCockpit: React.FC<FounderCockpitProps> = ({
       }
     } catch {
       if (
-        clean.toUpperCase() === 'SETRI-VISION-2026' ||
-        clean.toUpperCase() === 'TAHA2026' ||
-        clean.toUpperCase() === masterPasskey.toUpperCase()
+        clean === 'Tahasetri1998@' ||
+        clean.toUpperCase() === 'TAHASETRI1998@' ||
+        clean === masterPasskey
       ) {
         onUnlock();
         setPasscodeError(false);
@@ -801,7 +802,7 @@ export const FounderCockpit: React.FC<FounderCockpitProps> = ({
                   type="text"
                   value={newKeyInput}
                   onChange={(e) => setNewKeyInput(e.target.value)}
-                  placeholder={isArabic ? 'أدخل كود المرور الجديد (مثال: TAHA-PRO-2026)...' : 'Enter new passkey...'}
+                  placeholder={isArabic ? 'أدخل كود المرور السري الجديد...' : 'Enter new secret passkey...'}
                   className="flex-1 w-full bg-slate-950 border border-slate-750 rounded-2xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
                 />
                 <button

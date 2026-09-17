@@ -62,13 +62,11 @@ export const FounderEncryptedGateModal: React.FC<FounderEncryptedGateModalProps>
       const inputHash = await hashKey(clean);
       const storedHash = localStorage.getItem('sanad_founder_passkey_hash');
 
+      // STRICT 100% SOVEREIGN LOCK: Only the exclusive master passkey Tahasetri1998@ or founder verified hash
       const isMatch =
-        (storedHash && inputHash === storedHash) ||
-        clean.toUpperCase() === 'TAHA2026' ||
-        clean.toUpperCase() === 'SETRI-VISION-2026' ||
-        clean.toUpperCase() === '2026' ||
-        clean.toUpperCase() === 'TAHA' ||
-        clean.toUpperCase() === 'SETRI';
+        clean === 'Tahasetri1998@' ||
+        clean.toUpperCase() === 'TAHASETRI1998@' ||
+        (storedHash && inputHash === storedHash);
 
       if (isMatch) {
         localStorage.setItem('sanad_founder_passkey_hash', inputHash);
@@ -80,12 +78,12 @@ export const FounderEncryptedGateModal: React.FC<FounderEncryptedGateModalProps>
         setFailedAttempts((prev) => prev + 1);
         setErrorMsg(
           isArabic
-            ? 'مفتاح التشفير السيادي غير صحيح. تم تسجيل المحاولة وتشفير المسار.'
-            : 'Invalid sovereign passkey. Attempt logged & path encrypted.'
+            ? 'مفتاح التشفير السيادي غير مصرح به. الوصول محظور تماماً ومقيد للمؤسس طه الستري فقط.'
+            : 'Unauthorized sovereign key. Access restricted exclusively to Founder TAHA SETRI.'
         );
       }
     } catch {
-      if (clean.toUpperCase() === 'TAHA2026' || clean.toUpperCase() === 'SETRI-VISION-2026' || clean.toUpperCase() === '2026' || clean.toUpperCase() === 'TAHA' || clean.toUpperCase() === 'SETRI') {
+      if (clean === 'Tahasetri1998@' || clean.toUpperCase() === 'TAHASETRI1998@') {
         onSuccess();
         onClose();
         setPasskey('');
